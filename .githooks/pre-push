@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "Running DML pre-push checks..."
+
+echo
+echo "1/2 Checking working tree..."
+if ! git diff --quiet || ! git diff --cached --quiet; then
+  echo "ERROR: Working tree has uncommitted changes."
+  echo "Commit or restore changes before pushing."
+  git status --short
+  exit 1
+fi
+
+echo
+echo "2/2 Checking project..."
+./tools/check-project.sh
+
+echo
+echo "Pre-push checks passed."
