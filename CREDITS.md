@@ -1,18 +1,26 @@
 # Credits
 
-Skyrim Android Mod Loader is a Skyrim Legendary Edition fork of Droid Mod Loader.
-It would not exist without the projects below, and their authors deserve the
+Skyrim Mod Loader (SML) is a Skyrim Legendary Edition fork of Droid Mod Loader
+(DML) by CyberShonk. SML adapts DML for the Skyrim static Android port.
+
+SML would not exist without the projects below, and their authors deserve the
 credit for the foundations, reference behaviour and tooling used here.
+
+> [!NOTE]
+> Yes, AI was used in building this.
 
 ## Upstream project
 
 ### Droid Mod Loader
 
 - Repository: https://github.com/CyberShonk/DroidModLoader
-- Role: upstream project. This fork keeps DML's archive import, installation,
-  profile, plugin and deployment pipeline and changes the UI and game support for
-  the Skyrim Android static port.
+- Role: upstream project. DML manages Bethesda game mods for Windows
+  compatibility environments hosted on Android, such as Winlator, GameHub and
+  similar tools. SML keeps DML's archive import, installation, profile, plugin
+  and deployment pipeline and adapts it for the Skyrim static Android port.
 - License: MIT.
+- Note: SML is a fork of DML. DML is not this project, and this project is not
+  DML.
 
 ## Reference projects
 
@@ -56,6 +64,15 @@ only as a behavioural reference.
 
 GameNative is a separate application. This fork does not include or modify its
 code, and it does not access another app's protected private storage.
+
+## Skyrim static Android port
+
+### Skyrim_Android
+
+- Repository: https://github.com/ttom795/Skyrim_Android/
+- Role: Creator of the Skyrim static Android port that SML targets. SML adapts
+  DML's pipeline to this port's file layout and plugin handling.
+- Note: SML is independent of and not endorsed by the Skyrim_Android project.
 
 ## Runtime libraries
 
