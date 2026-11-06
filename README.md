@@ -24,6 +24,10 @@ handling.
 
 The Skyrim static Android port is created by https://github.com/ttom795/Skyrim_Android/.
 
+**LOOT Android** by TweakerZ is a companion load-order sorting app for SML. It
+reads and writes the same `Plugins.txt` and `loadorder.txt` that SML manages,
+and sorts plugins using the real libloot engine: https://github.com/TweakerZ/loot-android
+
 > [!WARNING]
 > SML is beta software that can write to game folders. Back up important game
 > files before testing a new build or deployment setup.
