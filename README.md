@@ -98,6 +98,7 @@ directory even when all files access is enabled.
 - [Changelog](releases/changelog.md)
 - [Credits](CREDITS.md)
 - [Contributing](CONTRIBUTING.md)
+- [LOOT Android](https://github.com/TweakerZ/loot-android) — companion load-order sorting app for SML
 
 ## Credits
 

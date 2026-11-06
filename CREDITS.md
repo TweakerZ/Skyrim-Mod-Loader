@@ -74,6 +74,17 @@ code, and it does not access another app's protected private storage.
   DML's pipeline to this port's file layout and plugin handling.
 - Note: SML is independent of and not endorsed by the Skyrim_Android project.
 
+## Companion app
+
+### LOOT Android
+
+- Repository: https://github.com/TweakerZ/loot-android
+- Role: Android front-end for LOOT that works with SML. It reads and writes the
+  same `Plugins.txt` and `loadorder.txt` that SML manages in the Skyrim static
+  port, and sorts the plugin list using the real libloot engine.
+- Note: LOOT Android is a separate application. SML does not include or modify
+  its code.
+
 ## Runtime libraries
 
 ### Junrar
