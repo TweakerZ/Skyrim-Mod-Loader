@@ -109,6 +109,7 @@ internal class PendingInstallerWorkflow(
     private val updateSelectedOptionIds: (Set<String>) -> Unit,
     private val clearPendingInstallerState: () -> Unit,
     private val refreshDashboard: () -> Unit,
+    private val showToast: (String) -> Unit = {},
     private val onExistingInstall: (String) -> Unit = {},
     private val onFinalizationFailure: (String) -> Unit = {}
 ) {
@@ -250,6 +251,7 @@ internal class PendingInstallerWorkflow(
             appendLog("RESULT: PASS")
 
             operation.succeed("Archive imported successfully.")
+            showToast("Installed ${installedMod.name}.")
             refreshDashboard()
         } catch (
             exception: InstallCancelledException
@@ -301,6 +303,7 @@ internal class PendingInstallerWorkflow(
             val message = "Install failed: ${throwable.message}"
             onFinalizationFailure(message)
             operation.fail(message, throwable)
+            showToast("Install failed: ${throwable.message}")
         } finally {
             activeCancellationController
                 .compareAndSet(

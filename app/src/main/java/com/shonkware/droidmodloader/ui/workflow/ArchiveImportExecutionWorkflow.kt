@@ -162,6 +162,7 @@ internal class ArchiveImportExecutionWorkflow(
     private val archiveReaderRegistry:
         ArchiveReaderRegistry = ArchiveReaderRegistry(),
     private val inspectionPublisher: (String) -> (ArchiveInspectionReport) -> Unit = { {} },
+    private val showToast: (String) -> Unit = {},
     private val clock: () -> Long = System::currentTimeMillis
 ) {
     private val activeCancellationController =
@@ -266,6 +267,7 @@ internal class ArchiveImportExecutionWorkflow(
                 publishInspection(ArchiveInspectionReport(fileName, clock(), message = message,
                     attemptId = operation.snapshot().id))
                 operation.fail(message)
+                showToast(message)
                 return
             }
 
@@ -365,6 +367,7 @@ internal class ArchiveImportExecutionWorkflow(
             publishInspection(ArchiveInspectionReport(fileName, clock(), message = message,
                 attemptId = operation?.snapshot()?.id))
             operation?.fail(message, throwable)
+            showToast(message)
         } finally {
             archiveSnapshotFile?.let { snapshot ->
                 try {
@@ -433,6 +436,7 @@ internal class ArchiveImportExecutionWorkflow(
         publishInspection(ArchiveInspectionReport(archiveName, clock(), failureCode = failureCode,
             message = message, attemptId = operation?.snapshot()?.id))
         operation?.fail("Import archive failed: $message", null)
+        showToast("Import failed: $message")
     }
 
 }

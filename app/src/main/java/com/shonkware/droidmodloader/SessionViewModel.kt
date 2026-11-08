@@ -149,6 +149,10 @@ internal class SessionViewModel @JvmOverloads constructor(
     private val packageName = application.packageName
     private val mainHandler = Handler(Looper.getMainLooper())
 
+    private fun notifyToast(message: String) {
+        runOnUiThread { showToast(message) }
+    }
+
     var settingsRequested by mutableStateOf(false)
         private set
     var pendingDeleteMod by mutableStateOf<Mod?>(null)
@@ -400,6 +404,7 @@ internal class SessionViewModel @JvmOverloads constructor(
                 "Cannot save ESP order: no port folder detected under the game root.", null
             )
             lastOperationStatus = "ESP order not saved: port folder missing."
+            notifyToast("ESP order not saved: no port folder found.")
             return
         }
 
@@ -416,9 +421,11 @@ internal class SessionViewModel @JvmOverloads constructor(
             writePortPluginFiles(portPath, ordered)
             operationReporter.appendLog("Saved ESP order to $portPath")
             lastOperationStatus = "ESP order saved."
+            notifyToast("ESP order saved.")
         } catch (e: Exception) {
             operationReporter.appendError("Could not save ESP order: ${e.message}", e)
             lastOperationStatus = "ESP order save failed."
+            notifyToast("ESP order save failed.")
             return
         }
 
@@ -846,6 +853,7 @@ internal class SessionViewModel @JvmOverloads constructor(
                 dashboardRefreshCoordinator.refresh()
                 archiveBrowserWorkflow.refreshIfOpen()
             },
+            showToast = ::notifyToast,
             onExistingInstall = {
                 runOnUiThread { installerChoices = installerChoices.copy(showExisting = true) }
             },
@@ -1093,7 +1101,8 @@ internal class SessionViewModel @JvmOverloads constructor(
             appendLog = { message -> operationReporter.appendLog(message) },
             appendError = { message, throwable -> operationReporter.appendError(message, throwable) },
             updateLastOperationStatus = { status -> lastOperationStatus = status },
-            refreshDashboard = dashboardRefreshCoordinator::refresh
+            refreshDashboard = dashboardRefreshCoordinator::refresh,
+            showToast = ::notifyToast
         )
     }
     private val modActionWorkflowController by lazy {
@@ -1197,7 +1206,8 @@ internal class SessionViewModel @JvmOverloads constructor(
             },
             appendLog = { message -> operationReporter.appendLog(message) },
             appendError = { message, throwable -> operationReporter.appendError(message, throwable) },
-            refreshDashboard = dashboardRefreshCoordinator::refresh
+            refreshDashboard = dashboardRefreshCoordinator::refresh,
+            showToast = ::notifyToast
         )
     }
     private val deploymentActionWorkflowController by lazy {
@@ -1492,7 +1502,8 @@ internal class SessionViewModel @JvmOverloads constructor(
                     context?.profileId, sourcePath,
                     isContextCurrent = { context != null && context == captureOperationContext() }
                 )
-            }
+            },
+            showToast = ::notifyToast
         )
     }
 

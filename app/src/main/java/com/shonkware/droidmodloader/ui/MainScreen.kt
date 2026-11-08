@@ -51,6 +51,7 @@ data class DashboardUiState(
     val versionLabel: String,
     val developerModeEnabled: Boolean,
     val lastOperationStatus: String,
+    val toast: UiToast? = null,
     val summaryText: String,
     val deploymentHealth: DeploymentHealth? = null,
     val mods: List<Mod>,

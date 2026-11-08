@@ -108,6 +108,12 @@ interface MainActivityUiState {
     var suppressedAttentionPromptIds: Set<AppAttentionId>
     var showDeployRecoveryDialog: Boolean
     var showForceFullRedeployConfirmDialog: Boolean
+    var toast: UiToast?
+
+    /** One-shot user-visible message. Replaced by the next call, never queued. */
+    fun showToast(message: String)
+
+    fun consumeToast(id: Long)
 
     fun deploymentHealthContextKey(): List<String> = listOf(activeProfileId.orEmpty(), selectedGameId,
         targetPathText, rootTargetPathText, realDeployEnabledState.toString(),
@@ -155,6 +161,11 @@ interface MainActivityUiState {
         directFolderState: DirectFolderSelectionUiState
     ): DashboardUiState
 }
+
+data class UiToast(
+    val id: Long,
+    val message: String
+)
 
 data class DirectFolderSelectionUiState(
     val allFilesAccessGranted: Boolean,
@@ -237,6 +248,17 @@ internal class MutableMainActivityUiState : MainActivityUiState {
     override var suppressedAttentionPromptIds by mutableStateOf<Set<AppAttentionId>>(emptySet())
     override var showDeployRecoveryDialog by mutableStateOf(false)
     override var showForceFullRedeployConfirmDialog by mutableStateOf(false)
+    override var toast by mutableStateOf<UiToast?>(null)
+    private var toastSequence = 0L
+
+    override fun showToast(message: String) {
+        if (message.isBlank()) return
+        toast = UiToast(++toastSequence, message)
+    }
+
+    override fun consumeToast(id: Long) {
+        if (toast?.id == id) toast = null
+    }
 
     override fun toDashboardUiState(
         secondScreenEnabled: Boolean,
@@ -258,6 +280,7 @@ internal class MutableMainActivityUiState : MainActivityUiState {
             versionLabel = BuildConfig.VERSION_NAME,
             developerModeEnabled = developerModeEnabled,
             lastOperationStatus = lastOperationStatus,
+            toast = toast,
             operationHistory = operationHistoryPresentation,
             summaryText = summaryText,
             deploymentHealth = health,

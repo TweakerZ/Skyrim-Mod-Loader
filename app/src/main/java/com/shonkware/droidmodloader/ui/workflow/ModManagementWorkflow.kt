@@ -40,7 +40,8 @@ internal class ModManagementWorkflow(
     private val appendLog: (String) -> Unit,
     private val appendError: (String, Throwable?) -> Unit,
     private val updateLastOperationStatus: (String) -> Unit,
-    private val refreshDashboard: () -> Unit
+    private val refreshDashboard: () -> Unit,
+    private val showToast: (String) -> Unit = {}
 ) {
     fun toggleModEnabled(modId: String) {
         withEngine { engine ->
@@ -108,12 +109,14 @@ internal class ModManagementWorkflow(
 
         withEngine { engine ->
             try {
+                val modName = engine.getCurrentMods().firstOrNull { it.id == modId }?.name ?: modId
                 val result = engine.uninstallModAndApplyDiff(modId)
 
                 if (!result.removed) {
                     appendError("Could not remove mod: $modId", null)
                     appendLog("RESULT: FAIL")
                     updateLastOperationStatus("Delete mod failed: could not remove $modId.")
+                    showToast("Delete failed: could not remove $modName.")
                     appendLog("----- Delete Installed Mod Workflow End -----")
                     return@withEngine
                 }
@@ -126,11 +129,13 @@ internal class ModManagementWorkflow(
 
                 appendLog("RESULT: PASS")
                 updateLastOperationStatus("Delete mod succeeded: ${result.removedModId}")
+                showToast("Deleted $modName.")
                 refreshDashboard()
             } catch (e: Exception) {
                 appendError("Delete installed mod workflow failed: ${e.message}", e)
                 appendLog("RESULT: FAIL")
                 updateLastOperationStatus("Delete mod failed: ${e.message}")
+                showToast("Delete failed: ${e.message}")
             }
 
             appendLog("----- Delete Installed Mod Workflow End -----")

@@ -68,7 +68,8 @@ internal class DeploymentExecutionWorkflow(
     private val beginOperation: (OperationKind, String) -> OperationAttempt,
     private val appendLog: (String) -> Unit,
     private val appendError: (String, Throwable?) -> Unit,
-    private val refreshDashboard: () -> Unit
+    private val refreshDashboard: () -> Unit,
+    private val showToast: (String) -> Unit = {}
 ) {
     fun deploy() {
         if (isOperationInProgress()) {
@@ -161,6 +162,7 @@ internal class DeploymentExecutionWorkflow(
             engine.syncPlugins()
             appendLog("RESULT: PASS")
             operation.succeed("Deploy succeeded ($effectiveMode).")
+            showToast("Mods deployed.")
         } catch (e: DeploymentPreflightException) {
             appendPreflightFailure(
                 operation = operation,
@@ -168,10 +170,12 @@ internal class DeploymentExecutionWorkflow(
                 failureMessage = "Deploy blocked by readiness check.",
                 exception = e
             )
+            showToast("Deploy blocked by readiness check.")
         } catch (e: Exception) {
             appendError("Deploy workflow failed: ${e.message}", e)
             appendLog("RESULT: FAIL")
             operation.fail("Deploy failed: ${e.message}", e)
+            showToast("Deploy failed.")
         }
 
         refreshDashboard()
@@ -229,6 +233,7 @@ internal class DeploymentExecutionWorkflow(
 
             appendLog("RESULT: PASS")
             operation.succeed("Full redeploy succeeded.")
+            showToast("Full redeploy complete.")
         } catch (e: DeploymentPreflightException) {
             appendPreflightFailure(
                 operation = operation,
@@ -236,10 +241,12 @@ internal class DeploymentExecutionWorkflow(
                 failureMessage = "Full redeploy blocked by readiness check.",
                 exception = e
             )
+            showToast("Full redeploy blocked by readiness check.")
         } catch (e: Exception) {
             appendError("Full redeploy failed: ${e.message}", e)
             appendLog("RESULT: FAIL")
             operation.fail("Full redeploy failed: ${e.message}", e)
+            showToast("Full redeploy failed.")
         }
 
         refreshDashboard()

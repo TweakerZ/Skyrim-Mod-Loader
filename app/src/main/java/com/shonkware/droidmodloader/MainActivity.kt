@@ -4,6 +4,7 @@ import android.app.AlertDialog
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -74,6 +75,12 @@ class MainActivity : ComponentActivity() {
             }
             LaunchedEffect(session.pendingSupportReportFile) {
                 session.consumeSupportReport()?.let(::shareLogs)
+            }
+            LaunchedEffect(state.toast) {
+                state.toast?.let { toast ->
+                    Toast.makeText(this@MainActivity, toast.message, Toast.LENGTH_SHORT).show()
+                    session.consumeToast(toast.id)
+                }
             }
             val deleteMod = session.pendingDeleteMod
             DisposableEffect(deleteMod) {
