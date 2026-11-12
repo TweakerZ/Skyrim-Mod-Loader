@@ -103,10 +103,10 @@ val versionProperties = Properties().apply {
 val dmlVersionName =
     versionProperties
         .getProperty("VERSION_NAME")
-        ?.takeIf { it.matches(Regex("""^v\d+\.\d+\.\d+(?:-beta|-rc\d+)?$""")) }
+        ?.takeIf { it.matches(Regex("""^\d+\.\d+\.\d+(?:-beta|-rc\d+)?$""")) }
         ?: error(
             "VERSION_NAME must use a value such as " +
-                    "v0.7.0-beta, v0.7.0-rc1, or v1.0.0."
+                    "0.7.0-beta, 0.7.0-rc1, or 1.0.0."
         )
 
 val dmlVersionCode =
