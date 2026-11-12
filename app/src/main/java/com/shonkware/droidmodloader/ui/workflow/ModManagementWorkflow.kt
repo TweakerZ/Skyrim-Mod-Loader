@@ -103,6 +103,45 @@ internal class ModManagementWorkflow(
         }
     }
 
+    /**
+     * Moves a mod to a one-based load position. Every mod at or after the
+     * requested position shifts down by one, so position 5 becomes the mod's
+     * new priority and the previous position 5 becomes position 6.
+     */
+    fun moveModToPosition(modId: String, requestedPosition: Int) {
+        withEngine { engine ->
+            val mods = engine.getCurrentMods().sortedBy { it.priority }.toMutableList()
+            val index = mods.indexOfFirst { it.id == modId }
+
+            if (index == -1) {
+                appendLog("Could not find mod: $modId")
+                return@withEngine
+            }
+
+            if (requestedPosition !in 1..mods.size) {
+                appendLog(
+                    "Invalid position $requestedPosition for $modId: " +
+                        "valid range is 1..${mods.size}."
+                )
+                return@withEngine
+            }
+
+            val targetIndex = requestedPosition - 1
+            if (targetIndex == index) {
+                appendLog("Mod $modId is already at position ${targetIndex + 1}.")
+                return@withEngine
+            }
+
+            val moved = mods.removeAt(index)
+            mods.add(targetIndex, moved)
+
+            engine.saveCurrentMods(normalizePriorities(mods))
+            appendLog("Moved $modId to position ${targetIndex + 1}")
+            engine.syncPlugins()
+            refreshDashboard()
+        }
+    }
+
     fun deleteInstalledMod(modId: String) {
         appendLog("----- Delete Installed Mod Workflow Start -----")
         appendLog("Requested delete for mod: $modId")

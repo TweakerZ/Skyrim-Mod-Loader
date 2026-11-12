@@ -38,6 +38,7 @@ fun ModsPanelDialog(
     onToggleMod: (String) -> Unit,
     onMoveModUp: (String) -> Unit,
     onMoveModDown: (String) -> Unit,
+    onMoveModToPosition: (String, Int) -> Unit,
     onDeleteMod: (Mod) -> Unit,
     onViewModFiles: (String) -> Unit,
     onOpenOverwriteFolder: () -> Unit,
@@ -100,9 +101,11 @@ fun ModsPanelDialog(
                                     mod = mod,
                                     contentIndex = modContentIndexes[mod.id],
                                     flags = modFlags[mod.id].orEmpty(),
+                                    maxPosition = mods.size,
                                     onToggleMod = onToggleMod,
                                     onMoveModUp = onMoveModUp,
                                     onMoveModDown = onMoveModDown,
+                                    onMoveModToPosition = onMoveModToPosition,
                                     onDeleteMod = onDeleteMod,
                                     onViewModFiles = onViewModFiles
                                 )

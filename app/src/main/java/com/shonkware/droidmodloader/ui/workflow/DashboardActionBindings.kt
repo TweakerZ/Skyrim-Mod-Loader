@@ -73,6 +73,7 @@ internal class DashboardActionBindings(
             onToggleMod = modActionWorkflowController::toggleMod,
             onMoveModUp = modActionWorkflowController::moveModUp,
             onMoveModDown = modActionWorkflowController::moveModDown,
+            onMoveModToPosition = modActionWorkflowController::moveModToPosition,
             onDeleteMod = modActionWorkflowController::requestDeleteMod,
             onTogglePlugin = pluginActionWorkflowController::togglePlugin,
             onMovePluginUp = pluginActionWorkflowController::movePluginUp,

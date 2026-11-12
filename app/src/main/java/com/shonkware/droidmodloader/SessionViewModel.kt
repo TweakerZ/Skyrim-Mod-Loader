@@ -1111,6 +1111,9 @@ internal class SessionViewModel @JvmOverloads constructor(
             onToggleModEnabled = { modId -> modManagementWorkflow.toggleModEnabled(modId) },
             onMoveModUp = { modId -> modManagementWorkflow.moveModUp(modId) },
             onMoveModDown = { modId -> modManagementWorkflow.moveModDown(modId) },
+            onMoveModToPosition = { modId, position ->
+                modManagementWorkflow.moveModToPosition(modId, position)
+            },
             onRequestDeleteMod = { mod -> showDeleteConfirmDialog(mod) },
             onViewModFiles = { modId -> profileContentInspectionCoordinator.openModFilePreview(modId) },
             onApplyModOrder = { orderedModIds -> modManagementWorkflow.applyModOrder(orderedModIds) }

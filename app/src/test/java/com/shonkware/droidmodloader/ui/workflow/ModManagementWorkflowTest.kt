@@ -132,6 +132,55 @@ class ModManagementWorkflowTest {
         assertEquals(listOf("Applied dragged mod order."), harness.logs)
     }
 
+    @Test
+    fun moveModToPositionInsertsAndShiftsFollowingMods() {
+        val engine = FakeModManagementEngine(
+            (1..6).map { mod("mod$it", priority = it) }
+        )
+        val harness = WorkflowHarness(engine)
+
+        harness.workflow.moveModToPosition("mod1", 5)
+
+        assertEquals(
+            listOf("mod2", "mod3", "mod4", "mod5", "mod1", "mod6"),
+            engine.savedMods.map { it.id }
+        )
+        assertEquals(listOf(1, 2, 3, 4, 5, 6), engine.savedMods.map { it.priority })
+        assertEquals(1, engine.syncCount)
+        assertEquals(1, harness.refreshCount)
+        assertTrue(harness.logs.contains("Moved mod1 to position 5"))
+    }
+
+    @Test
+    fun moveModToPositionRejectsOutOfRangeAndUnchangedPositions() {
+        val engine = FakeModManagementEngine(
+            listOf(
+                mod("first", priority = 1),
+                mod("second", priority = 2),
+                mod("third", priority = 3)
+            )
+        )
+        val harness = WorkflowHarness(engine)
+
+        harness.workflow.moveModToPosition("first", 0)
+        harness.workflow.moveModToPosition("first", 4)
+        harness.workflow.moveModToPosition("first", 1)
+        harness.workflow.moveModToPosition("missing", 2)
+
+        assertTrue(engine.savedMods.isEmpty())
+        assertEquals(0, engine.syncCount)
+        assertEquals(0, harness.refreshCount)
+        assertEquals(
+            listOf(
+                "Invalid position 0 for first: valid range is 1..3.",
+                "Invalid position 4 for first: valid range is 1..3.",
+                "Mod first is already at position 1.",
+                "Could not find mod: missing"
+            ),
+            harness.logs
+        )
+    }
+
     private class WorkflowHarness(engine: FakeModManagementEngine) {
         val logs = mutableListOf<String>()
         val errors = mutableListOf<Pair<String, Throwable?>>()

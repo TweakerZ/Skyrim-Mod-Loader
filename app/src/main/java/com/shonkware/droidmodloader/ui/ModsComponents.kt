@@ -8,9 +8,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -22,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.shonkware.droidmodloader.engine.flags.ModFlag
 import com.shonkware.droidmodloader.engine.index.ModContentIndex
@@ -38,6 +41,7 @@ fun ModsCard(
     onToggleMod: (String) -> Unit,
     onMoveModUp: (String) -> Unit,
     onMoveModDown: (String) -> Unit,
+    onMoveModToPosition: (String, Int) -> Unit,
     onDeleteMod: (Mod) -> Unit,
     onViewModFiles: (String) -> Unit,
     onOpenFullscreen: () -> Unit,
@@ -74,14 +78,17 @@ fun ModsCard(
             if (mods.isEmpty()) {
                 Text("No installed mods found.")
             } else {
-                mods.sortedBy { it.priority }.forEach { mod ->
+                val orderedMods = mods.sortedBy { it.priority }
+                orderedMods.forEach { mod ->
                     CompactModRow(
                         mod = mod,
                         contentIndex = modContentIndexes[mod.id],
                         flags = modFlags[mod.id].orEmpty(),
+                        maxPosition = orderedMods.size,
                         onToggleMod = onToggleMod,
                         onMoveModUp = onMoveModUp,
                         onMoveModDown = onMoveModDown,
+                        onMoveModToPosition = onMoveModToPosition,
                         onDeleteMod = onDeleteMod,
                         onViewModFiles = onViewModFiles
                     )
@@ -208,13 +215,16 @@ fun CompactModRow(
     mod: Mod,
     contentIndex: ModContentIndex?,
     flags: Set<ModFlag>,
+    maxPosition: Int,
     onToggleMod: (String) -> Unit,
     onMoveModUp: (String) -> Unit,
     onMoveModDown: (String) -> Unit,
+    onMoveModToPosition: (String, Int) -> Unit,
     onDeleteMod: (Mod) -> Unit,
     onViewModFiles: (String) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
+    var positionText by remember(mod.id) { mutableStateOf("") }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -282,7 +292,11 @@ fun CompactModRow(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         DmlButtons.Secondary(
                             text = "Up",
                             onClick = { onMoveModUp(mod.id) }
@@ -291,6 +305,32 @@ fun CompactModRow(
                         DmlButtons.Secondary(
                             text = "Down",
                             onClick = { onMoveModDown(mod.id) }
+                        )
+
+                        OutlinedTextField(
+                            value = positionText,
+                            onValueChange = { value ->
+                                if (value.length <= 3 && value.all(Char::isDigit)) {
+                                    positionText = value
+                                }
+                            },
+                            modifier = Modifier.weight(1f),
+                            singleLine = true,
+                            label = { Text("Pos") },
+                            placeholder = { Text(mod.priority.toString().padStart(3, '0')) },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                        )
+
+                        DmlButtons.Secondary(
+                            text = "Set",
+                            onClick = {
+                                val position = positionText.toIntOrNull()
+                                if (position != null) {
+                                    onMoveModToPosition(mod.id, position)
+                                    positionText = ""
+                                }
+                            },
+                            enabled = positionText.toIntOrNull()?.let { it in 1..maxPosition } == true
                         )
                     }
 
