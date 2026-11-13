@@ -37,8 +37,6 @@ and sorts plugins using the real libloot engine: https://github.com/TweakerZ/loo
 
 ## Current support
 
-The current release is [v0.7.0-rc8](https://github.com/TweakerZ/Skyrim-Mod-Loader/releases/tag/v0.7.0-rc8).
-
 SML supports one game profile: **Skyrim Legendary Edition**.
 
 Current capabilities include profiles, a Material You dashboard, Android system
@@ -56,28 +54,9 @@ including supported solid RAR5 archives. Password protected and multipart RAR
 archives, and some uncommon compression or encryption variants, are unsupported.
 See the [archive limits](docs/user-guide.md#current-limitations) before importing.
 
-## New in v0.7.0-rc8
-
-- Edit the ESP list from the dashboard: tick plugins on or off and move them up
-  or down. Official Skyrim masters stay locked at the top.
-- Choose **Save ESP Order** to write the pending changes to the port folder.
-  `Plugins.txt` receives the enabled plugins and `loadorder.txt` receives the
-  full order.
-- The Skyrim port folder is detected automatically at `<game root>/port`. Its
-  `save/AppData/Local/Skyrim` folder is read on startup and after profile or
-  target changes, and written when ESP order is saved.
-- Plugin installs, removals, mod enable/disable changes, normal deployment and
-  full redeployment now reconcile the plugin list. Port plugin files are updated
-  when the set of plugins changes, so removed ESPs no longer linger.
-- The dashboard header shows the app name and version without the app icon.
-- Launcher icons use the updated artwork with a white adaptive background and
-  matching legacy and monochrome resources.
-
-See the [release notes](releases/notes/v0.7.0-rc8.md) for changes and limitations.
-
 ## Compatibility environments
 
-SML is intended for Android Windows compatibility setups that expose usable game
+SML is intended for Android compatibility setups that expose usable game
 folders through shared storage. SML does not modify or depend on another
 application's protected private storage.
 
@@ -86,7 +65,7 @@ directory even when all files access is enabled.
 
 ## Get started
 
-1. Download `DroidModLoader-v0.7.0-rc8.apk` from the [GitHub release](https://github.com/TweakerZ/Skyrim-Mod-Loader/releases/tag/v0.7.0-rc8).
+1. Download `SkyrimModLoader.apk` from the [GitHub release](https://github.com/TweakerZ/Skyrim-Mod-Loader/releases).
 2. Install the APK on your Android device. To update, install over the existing
    release app without uninstalling or clearing app data to retain profiles and
    state managed by SML.
