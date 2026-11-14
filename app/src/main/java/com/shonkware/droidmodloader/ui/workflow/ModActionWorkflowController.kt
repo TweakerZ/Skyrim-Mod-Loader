@@ -8,6 +8,7 @@ internal class ModActionWorkflowController(
     private val onMoveModUp: (String) -> Unit,
     private val onMoveModDown: (String) -> Unit,
     private val onMoveModToPosition: (String, Int) -> Unit,
+    private val onSetAllModsEnabled: (Boolean) -> Unit,
     private val onRequestDeleteMod: (Mod) -> Unit,
     private val onViewModFiles: (String) -> Unit,
     private val onApplyModOrder: (List<String>) -> Unit
@@ -34,6 +35,18 @@ internal class ModActionWorkflowController(
     fun moveModToPosition(modId: String, position: Int) {
         runInBackground {
             onMoveModToPosition(modId, position)
+        }
+    }
+
+    fun disableAllMods() {
+        runInBackground {
+            onSetAllModsEnabled(false)
+        }
+    }
+
+    fun enableAllMods() {
+        runInBackground {
+            onSetAllModsEnabled(true)
         }
     }
 

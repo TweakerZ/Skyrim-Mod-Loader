@@ -183,6 +183,12 @@ fun InstallerChoiceDialog(
                                                 Text(option.name)
                                                 if (option.description.isNotBlank()) Text(option.description,
                                                     style = MaterialTheme.typography.bodySmall)
+                                                if (option.imagePath.isNotBlank()) {
+                                                    FomodOptionImage(
+                                                        prepared = prepared,
+                                                        imagePath = option.imagePath
+                                                    )
+                                                }
                                                 when {
                                                     option.type == InstallerOptionType.REQUIRED -> {
                                                         Text("Required",

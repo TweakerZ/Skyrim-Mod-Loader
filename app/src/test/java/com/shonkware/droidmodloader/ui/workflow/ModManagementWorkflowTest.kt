@@ -181,6 +181,45 @@ class ModManagementWorkflowTest {
         )
     }
 
+    @Test
+    fun setAllModsEnabledAppliesStateToEveryModAndNormalizes() {
+        val engine = FakeModManagementEngine(
+            listOf(
+                mod("first", priority = 10, enabled = false),
+                mod("second", priority = 5, enabled = true),
+                mod("third", priority = 7, enabled = false)
+            )
+        )
+        val harness = WorkflowHarness(engine)
+
+        harness.workflow.setAllModsEnabled(true)
+
+        assertEquals(listOf("second", "third", "first"), engine.savedMods.map { it.id })
+        assertEquals(listOf(1, 2, 3), engine.savedMods.map { it.priority })
+        assertTrue(engine.savedMods.all { it.enabled })
+        assertEquals(1, engine.syncCount)
+        assertEquals(1, harness.refreshCount)
+        assertTrue(harness.logs.contains("Enabled all 3 mods."))
+    }
+
+    @Test
+    fun setAllModsEnabledNoOpWhenAlreadyAtState() {
+        val engine = FakeModManagementEngine(
+            listOf(
+                mod("first", priority = 1, enabled = false),
+                mod("second", priority = 2, enabled = false)
+            )
+        )
+        val harness = WorkflowHarness(engine)
+
+        harness.workflow.setAllModsEnabled(false)
+
+        assertTrue(engine.savedMods.isEmpty())
+        assertEquals(0, engine.syncCount)
+        assertEquals(0, harness.refreshCount)
+        assertEquals(listOf("All mods are already disabled."), harness.logs)
+    }
+
     private class WorkflowHarness(engine: FakeModManagementEngine) {
         val logs = mutableListOf<String>()
         val errors = mutableListOf<Pair<String, Throwable?>>()

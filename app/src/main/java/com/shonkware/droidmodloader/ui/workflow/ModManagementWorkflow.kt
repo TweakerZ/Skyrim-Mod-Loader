@@ -142,6 +142,30 @@ internal class ModManagementWorkflow(
         }
     }
 
+    /**
+     * Enables or disables every installed mod at once, keeping the current
+     * load order. Used by the Disable All / Enable All dashboard buttons.
+     */
+    fun setAllModsEnabled(enabled: Boolean) {
+        withEngine { engine ->
+            val mods = engine.getCurrentMods().sortedBy { it.priority }
+            if (mods.all { it.enabled == enabled }) {
+                appendLog(if (enabled) "All mods are already enabled." else "All mods are already disabled.")
+                return@withEngine
+            }
+
+            val updated = mods.map { it.copy(enabled = enabled) }
+            engine.saveCurrentMods(normalizePriorities(updated))
+            appendLog(
+                if (enabled) "Enabled all ${updated.size} mods."
+                else "Disabled all ${updated.size} mods."
+            )
+            engine.syncPlugins()
+            refreshDashboard()
+            showToast(if (enabled) "Enabled all mods." else "Disabled all mods.")
+        }
+    }
+
     fun deleteInstalledMod(modId: String) {
         appendLog("----- Delete Installed Mod Workflow Start -----")
         appendLog("Requested delete for mod: $modId")

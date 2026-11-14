@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -173,7 +174,10 @@ fun MainActionsCard(
     operationInProgress: Boolean,
     archiveImportInProgress: Boolean,
     archiveQueueCount: Int,
+    activeOperationText: String,
     onInstallMod: () -> Unit,
+    onDisableAllMods: () -> Unit,
+    onEnableAllMods: () -> Unit,
     onDeployMods: () -> Unit
 ) {
     Card(
@@ -207,12 +211,45 @@ fun MainActionsCard(
                 )
             }
 
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                DmlButtons.Secondary(
+                    text = "Disable All Mods",
+                    enabled = !operationInProgress,
+                    onClick = onDisableAllMods,
+                    modifier = Modifier.weight(1f)
+                )
+
+                DmlButtons.Secondary(
+                    text = "Enable All Mods",
+                    enabled = !operationInProgress,
+                    onClick = onEnableAllMods,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
             DmlButtons.Primary(
                 text = "Deploy Mods",
                 enabled = !operationInProgress,
                 onClick = onDeployMods,
                 modifier = Modifier.fillMaxWidth()
             )
+
+            if (operationInProgress || archiveImportInProgress) {
+                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                Text(
+                    text = when {
+                        archiveImportInProgress && archiveQueueCount > 0 ->
+                            "Importing archives... ($archiveQueueCount queued)"
+                        archiveImportInProgress -> "Importing archives..."
+                        activeOperationText.isNotBlank() -> activeOperationText
+                        else -> "Working..."
+                    },
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
         }
     }
 }

@@ -136,6 +136,8 @@ data class DashboardActions(
     val onMoveModUp: (String) -> Unit,
     val onMoveModDown: (String) -> Unit,
     val onMoveModToPosition: (String, Int) -> Unit,
+    val onDisableAllMods: () -> Unit,
+    val onEnableAllMods: () -> Unit,
     val onDeleteMod: (Mod) -> Unit,
     val onTogglePlugin: (String) -> Unit,
     val onMovePluginUp: (String) -> Unit,
@@ -280,7 +282,10 @@ private fun MainDashboardScreen(
                     operationInProgress = state.operationInProgress,
                     archiveImportInProgress = state.archiveImportInProgress,
                     archiveQueueCount = state.pendingArchiveImportCount,
+                    activeOperationText = state.activeOperationText,
                     onInstallMod = actions.onInstallMod,
+                    onDisableAllMods = actions.onDisableAllMods,
+                    onEnableAllMods = actions.onEnableAllMods,
                     onDeployMods = actions.onDeployMods
                 )
 

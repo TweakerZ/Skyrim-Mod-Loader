@@ -132,6 +132,7 @@ internal object UiWordingFixtures {
         onVersionTap = {}, onInstallMod = {}, onChooseArchiveFolder = {}, onDismissArchiveFolderSetup = {},
         onRefreshArchiveFolder = {}, onChangeArchiveFolder = {}, onInstallArchiveFromFolder = {},
         onDeployMods = {}, onWriteLoadOrderFiles = {}, onToggleMod = {}, onMoveModUp = {}, onMoveModDown = {},
+        onMoveModToPosition = { _, _ -> }, onDisableAllMods = {}, onEnableAllMods = {},
         onDeleteMod = {}, onTogglePlugin = {}, onMovePluginUp = {}, onMovePluginDown = {},
         onTogglePendingPlugin = {}, onMovePendingPluginUp = {}, onMovePendingPluginDown = {}, onSaveEspOrder = {},
         onSelectGame = {}, onPickTargetFolder = {}, onSaveSettings = {}, onShareLogs = {}, onProfileNameChanged = {},
