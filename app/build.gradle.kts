@@ -168,6 +168,11 @@ android {
         compose = true
         buildConfig = true
     }
+
+    // Shared Material You design system, kept as a sibling of this repository.
+    // See ../skyrim-suite-ui/README.md.
+    sourceSets["main"].java.srcDir(rootProject.file("../skyrim-suite-ui/src/main/kotlin"))
+    sourceSets["main"].kotlin.srcDir(rootProject.file("../skyrim-suite-ui/src/main/kotlin"))
 }
 
 // Provider-backed Git reads are tracked by Gradle's configuration cache. The diff
@@ -239,6 +244,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.material.icons.core)
     testImplementation("junit:junit:4.13.2")
 
     // Provides real org.json classes for local JVM unit tests.

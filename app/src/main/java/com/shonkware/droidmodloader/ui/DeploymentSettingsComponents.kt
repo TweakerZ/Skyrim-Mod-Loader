@@ -1,22 +1,22 @@
 package com.shonkware.droidmodloader.ui
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.shonkware.droidmodloader.ui.theme.DmlButtons
-import com.shonkware.droidmodloader.ui.theme.DmlColors
-import com.shonkware.droidmodloader.ui.theme.DmlDefaults
+import com.skyrimsuite.ui.SuitePathRow
+import com.skyrimsuite.ui.SuiteSectionHeader
+import com.skyrimsuite.ui.SuiteToggleRow
 
+/**
+ * Contents of the advanced-settings sheet. Every filesystem path in the app
+ * lives here; the dashboard itself only shows readable status chips.
+ */
 @Composable
 fun DeploymentSettingsCard(
     selectedDataPathText: String,
@@ -28,85 +28,49 @@ fun DeploymentSettingsCard(
     onSaveSettings: () -> Unit,
     onToggleSecondScreen: () -> Unit
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = DmlDefaults.panelCardColors(),
-        border = BorderStroke(1.dp, DmlColors.BorderDim)
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            Text("Game Folders", fontWeight = FontWeight.Bold)
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        SuiteSectionHeader(
+            title = "Game folders",
+            subtitle = "DML checks the game folder and finds its Data folder automatically."
+        )
 
+        SuitePathRow(
+            title = "Game folder",
+            path = selectedRootPathText,
+            onChange = onPickTargetFolder
+        )
+
+        SuitePathRow(
+            title = "Data folder (detected)",
+            path = selectedDataPathText,
+            onChange = onPickTargetFolder
+        )
+
+        SuitePathRow(
+            title = "Port folder",
+            path = portFolderPath,
+            onChange = onPickTargetFolder
+        )
+
+        if (portFolderValidationMessage != null) {
             Text(
-                text = "Game folder:",
+                text = portFolderValidationMessage,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                text = selectedRootPathText.ifBlank { "(not set)" },
-                style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
-                color = MaterialTheme.colorScheme.onSurface
-            )
-
-            Text(
-                text = "Data folder:",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                text = selectedDataPathText.ifBlank { "(not set)" },
-                style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
-                color = MaterialTheme.colorScheme.onSurface
-            )
-
-            Text(
-                text = "Port folder:",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                text = portFolderPath.ifBlank { "(not set)" },
-                style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
-                color = MaterialTheme.colorScheme.onSurface
-            )
-
-            portFolderValidationMessage?.let { message ->
-                Text(
-                    text = message,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error
-                )
-            }
-
-            Text(
-                text = "Choose the installed game's main folder. DML checks it and finds the Data folder automatically.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            DmlButtons.Secondary(
-                text = "Change Game Folder",
-                onClick = onPickTargetFolder,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            DmlButtons.Primary(
-                text = "Save Settings",
-                onClick = onSaveSettings,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            DmlButtons.Secondary(
-                text = if (secondScreenEnabled) {
-                    "Hide Plugins on Second Screen"
-                } else {
-                    "Show Plugins on Second Screen"
-                },
-                onClick = onToggleSecondScreen,
-                modifier = Modifier.fillMaxWidth()
+                color = MaterialTheme.colorScheme.error
             )
         }
+
+        DmlButtons.Primary(
+            text = "Save Settings",
+            onClick = onSaveSettings,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        SuiteToggleRow(
+            title = "Show plugins on second screen",
+            subtitle = "Mirrors the plugin list on an external display.",
+            checked = secondScreenEnabled,
+            onCheckedChange = { onToggleSecondScreen() }
+        )
     }
 }

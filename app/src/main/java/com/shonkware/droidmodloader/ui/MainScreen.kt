@@ -5,17 +5,20 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -43,8 +46,17 @@ import com.shonkware.droidmodloader.ui.archive.ArchiveBrowserUiState
 import com.shonkware.droidmodloader.ui.attention.AppAttentionPresentationMapper
 import com.shonkware.droidmodloader.ui.EspCard
 
+import com.shonkware.droidmodloader.ui.theme.DmlButtons
 import com.shonkware.droidmodloader.ui.theme.DmlMatteBackground
 import com.shonkware.droidmodloader.engine.storage.DirectFolderBrowserState
+import com.shonkware.droidmodloader.ui.workflow.GameCatalog
+import com.skyrimsuite.ui.SuiteBarAction
+import com.skyrimsuite.ui.SuiteChip
+import com.skyrimsuite.ui.SuiteChipTone
+import com.skyrimsuite.ui.SuiteDetailRow
+import com.skyrimsuite.ui.SuiteScreen
+import com.skyrimsuite.ui.SuiteSectionHeader
+import com.skyrimsuite.ui.SuiteSettingsSheet
 
 data class DashboardUiState(
     val appName: String,
@@ -219,171 +231,206 @@ data class DashboardActions(
 
 @Composable
 private fun SectionHeader(title: String) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.titleMedium,
-        fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
-        modifier = Modifier.padding(top = 8.dp)
-    )
+    SuiteSectionHeader(title = title)
 }
 
 @Composable
 private fun MainDashboardScreen(
     state: DashboardUiState,
-    actions: DashboardActions,
-    scrollState: ScrollState
+    actions: DashboardActions
 ) {
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background
-    ) { padding ->
+    var settingsVisible by rememberSaveable { mutableStateOf(false) }
+
+    val visibleNotifications = state.appAttention.filterNot { it.id in state.dismissedAttentionIds }
+
+    val chips = buildList {
+        add(SuiteChip("Profile: ${state.activeProfileName}", SuiteChipTone.Neutral))
+        add(SuiteChip(GameCatalog.displayName(state.selectedGameId), SuiteChipTone.Neutral))
+        add(
+            SuiteChip(
+                label = if (state.rootTargetReady) "Game folder ready" else "Game folder missing",
+                tone = if (state.rootTargetReady) SuiteChipTone.Positive else SuiteChipTone.Warning
+            )
+        )
+        add(
+            SuiteChip(
+                label = if (state.dataTargetReady) "Data ready" else "Data missing",
+                tone = if (state.dataTargetReady) SuiteChipTone.Positive else SuiteChipTone.Warning
+            )
+        )
+        add(SuiteChip("${state.mods.size} mods"))
+        add(SuiteChip("${state.plugins.size} plugins"))
+        if (visibleNotifications.isNotEmpty()) {
+            add(SuiteChip("${visibleNotifications.size} notice(s)", SuiteChipTone.Warning))
+        }
+        if (state.operationInProgress || state.archiveImportInProgress) {
+            add(SuiteChip(state.activeOperationText.ifBlank { "Working" }, SuiteChipTone.Warning))
+        }
+    }
+
+    SuiteScreen(
+        title = state.appName,
+        subtitle = state.versionLabel,
+        chips = chips,
+        onSettings = { settingsVisible = true },
+        primaryAction = SuiteBarAction(
+            label = "Deploy Mods",
+            onClick = actions.onDeployMods,
+            enabled = !state.operationInProgress
+        ),
+        secondaryActions = listOf(
+            SuiteBarAction(
+                label = if (state.archiveImportInProgress) "Importing..." else "Import Mods",
+                onClick = actions.onInstallMod,
+                enabled = !state.operationInProgress && !state.archiveImportInProgress
+            ),
+            SuiteBarAction(
+                label = "Profiles",
+                onClick = actions.onOpenProfileDialog,
+                enabled = !state.operationInProgress
+            )
+        ),
+        busy = state.operationInProgress || state.archiveImportInProgress,
+        busyText = state.activeOperationText
+    ) {
         InfoPopoverHost {
-        DmlMatteBackground {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .padding(16.dp)
-                    .verticalScroll(scrollState),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                HeaderCard(
-                    appName = state.appName,
-                    versionLabel = state.versionLabel,
-                    onVersionTap = actions.onVersionTap
-                )
-
-                StatusCard(
-                    activeProfileName = state.activeProfileName,
-                    selectedGameId = state.selectedGameId,
-                    dataTargetReady = state.dataTargetReady,
-                    rootTargetReady = state.rootTargetReady,
-                    realDeployEnabled = state.realDeployEnabled,
-                    lastOperationStatus = state.lastOperationStatus,
-                    summaryText = state.summaryText,
-                    onOpenProfileDialog = actions.onOpenProfileDialog
-                )
-
-                val visibleNotifications = state.appAttention.filterNot { it.id in state.dismissedAttentionIds }
-                if (visibleNotifications.isNotEmpty()) {
-                    SectionHeader("Notifications")
-                }
-                visibleNotifications.forEach { attention ->
-                        AppAttentionCard(
-                            attention = attention,
-                            onAction = actions.onAttentionAction,
-                            onDismissForSession = {
-                                actions.onDismissAttentionForSession(attention.id)
-                            }
-                        )
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            if (visibleNotifications.isNotEmpty()) {
+                SectionHeader("Notifications")
+            }
+            visibleNotifications.forEach { attention ->
+                AppAttentionCard(
+                    attention = attention,
+                    onAction = actions.onAttentionAction,
+                    onDismissForSession = {
+                        actions.onDismissAttentionForSession(attention.id)
                     }
+                )
+            }
 
-                SectionHeader("Install Mods")
-                MainActionsCard(
+            StatusCard(
+                activeProfileName = state.activeProfileName,
+                selectedGameId = state.selectedGameId,
+                dataTargetReady = state.dataTargetReady,
+                rootTargetReady = state.rootTargetReady,
+                realDeployEnabled = state.realDeployEnabled,
+                lastOperationStatus = state.lastOperationStatus,
+                summaryText = state.summaryText,
+                onOpenProfileDialog = actions.onOpenProfileDialog
+            )
+
+            ModsCard(
+                mods = state.mods,
+                modContentIndexes = state.modContentIndexes,
+                modFlags = state.modFlags,
+                onToggleMod = actions.onToggleMod,
+                onMoveModUp = actions.onMoveModUp,
+                onMoveModDown = actions.onMoveModDown,
+                onMoveModToPosition = actions.onMoveModToPosition,
+                onDeleteMod = actions.onDeleteMod,
+                onViewModFiles = actions.onViewModFiles,
+                onOpenOverwriteFolder = actions.onOpenOverwriteFolder
+            )
+
+            SectionHeader("ESP / Plugins")
+            EspCard(
+                plugins = state.pendingEspPlugins.takeIf { it.isNotEmpty() } ?: state.plugins,
+                archives = state.modContentIndexes.values
+                    .flatMap { index -> index.archives }
+                    .distinctBy { archive -> archive.normalizedPath },
+                onTogglePlugin = actions.onTogglePendingPlugin,
+                onMovePluginUp = actions.onMovePendingPluginUp,
+                onMovePluginDown = actions.onMovePendingPluginDown,
+                onSaveEspOrder = actions.onSaveEspOrder,
+                hasPendingChanges = state.pendingEspHasChanges
+            )
+
+            RecentOperationsCard(state.operationHistory)
+
+            ReportCard(
+                logText = state.logText,
+                onShareLogs = actions.onShareLogs,
+                operationInProgress = state.operationInProgress,
+                integrityCheckInProgress = state.integrityCheckInProgress,
+                deploymentHealth = state.deploymentHealth,
+                onRefreshDeploymentHealth = actions.onRefreshDeploymentHealth,
+                onInspectStorage = actions.onInspectStorage,
+                onInspectEnvironment = actions.onInspectEnvironment,
+                onVerifyManagedContent = actions.onVerifyManagedContent,
+                onCancelIntegrityCheck = actions.onCancelIntegrityCheck
+            )
+
+            if (state.developerModeEnabled) {
+                DeveloperToolsCard(
                     operationInProgress = state.operationInProgress,
-                    archiveImportInProgress = state.archiveImportInProgress,
-                    archiveQueueCount = state.pendingArchiveImportCount,
-                    activeOperationText = state.activeOperationText,
-                    onInstallMod = actions.onInstallMod,
-                    onDisableAllMods = actions.onDisableAllMods,
-                    onEnableAllMods = actions.onEnableAllMods,
-                    onDeployMods = actions.onDeployMods
+                    onBuildResolvedDataGraph = actions.onBuildResolvedDataGraph,
+                    onBuildDeploymentPlan = actions.onBuildDeploymentPlan
                 )
+            }
 
-                ModsCard(
-                    mods = state.mods,
-                    modContentIndexes = state.modContentIndexes,
-                    modFlags = state.modFlags,
-                    onToggleMod = actions.onToggleMod,
-                    onMoveModUp = actions.onMoveModUp,
-                    onMoveModDown = actions.onMoveModDown,
-                    onMoveModToPosition = actions.onMoveModToPosition,
-                    onDeleteMod = actions.onDeleteMod,
-                    onViewModFiles = actions.onViewModFiles,
-                    onOpenFullscreen = actions.onOpenModsFullscreen,
-                    onOpenOverwriteFolder = actions.onOpenOverwriteFolder
-                )
-
-                SectionHeader("ESP / Plugins")
-                EspCard(
-                    plugins = state.pendingEspPlugins.takeIf { it.isNotEmpty() } ?: state.plugins,
-                    archives = state.modContentIndexes.values
-                        .flatMap { index -> index.archives }
-                        .distinctBy { archive -> archive.normalizedPath },
-                    onTogglePlugin = actions.onTogglePendingPlugin,
-                    onMovePluginUp = actions.onMovePendingPluginUp,
-                    onMovePluginDown = actions.onMovePendingPluginDown,
-                    onSaveEspOrder = actions.onSaveEspOrder,
-                    hasPendingChanges = state.pendingEspHasChanges
-                )
-
-                SectionHeader("Deploy & Settings")
-                DeploymentSettingsCard(
-                    selectedDataPathText = state.selectedDataPathText,
-                    selectedRootPathText = state.selectedRootPathText,
-                    portFolderPath = state.portFolderPath,
-                    portFolderValidationMessage = state.portFolderValidationMessage,
-                    secondScreenEnabled = state.secondScreenEnabled,
-                    onPickTargetFolder = actions.onPickTargetFolder,
-                    onSaveSettings = actions.onSaveSettings,
-                    onToggleSecondScreen = actions.onToggleSecondScreen
-                )
-
-                QuickStartCard()
-
-                RecentOperationsCard(state.operationHistory)
-
-                ReportCard(
-                    logText = state.logText,
-                    onShareLogs = actions.onShareLogs,
-                    operationInProgress = state.operationInProgress,
-                    integrityCheckInProgress = state.integrityCheckInProgress,
-                    deploymentHealth = state.deploymentHealth,
-                    onRefreshDeploymentHealth = actions.onRefreshDeploymentHealth,
-                    onInspectStorage = actions.onInspectStorage,
-                    onInspectEnvironment = actions.onInspectEnvironment,
-                    onVerifyManagedContent = actions.onVerifyManagedContent,
-                    onCancelIntegrityCheck = actions.onCancelIntegrityCheck
-                )
-
-                if (state.developerModeEnabled) {
-                    DeveloperToolsCard(
-                        operationInProgress = state.operationInProgress,
-                        onBuildResolvedDataGraph = actions.onBuildResolvedDataGraph,
-                        onBuildDeploymentPlan = actions.onBuildDeploymentPlan
-                    )
-                }
-
-                RecoveryToolsCard(
-                    operationInProgress = state.operationInProgress,
-                    deployRecoveryAttentionRequired = state.deployRecoveryAttentionRequired,
-                    deploymentBlockedByRecovery = state.deploymentHealth?.let {
-                        it.installRecoveryRequired || it.recovery != DeploymentRecoveryFact.NONE
-                    } ?: true,
-                    onViewLastDeployJournal = actions.onViewLastDeployJournal,
-                    onBuildFullRedeployPlan = actions.onBuildFullRedeployPlan,
-                    onRequestForceFullRedeploy = actions.onRequestForceFullRedeploy,
-                    onMarkDeployRecoveryReviewed = actions.onMarkDeployRecoveryReviewed
-                )
-
-                if (state.showDeployRecoveryDialog) {
-                    AlertDialog(
-                        onDismissRequest = actions.onCloseDeployRecoveryDetails,
-                        title = {
-                            Text("Recovery Details")
-                        },
-                        text = {
-                            Text(state.deployRecoveryWarningText, modifier = Modifier.verticalScroll(rememberScrollState()))
-                        },
-                        confirmButton = {
-                            TextButton(onClick = actions.onCloseDeployRecoveryDetails) {
-                                Text("Close")
-                            }
-                        }
-                    )
-                }
+            RecoveryToolsCard(
+                operationInProgress = state.operationInProgress,
+                deployRecoveryAttentionRequired = state.deployRecoveryAttentionRequired,
+                deploymentBlockedByRecovery = state.deploymentHealth?.let {
+                    it.installRecoveryRequired || it.recovery != DeploymentRecoveryFact.NONE
+                } ?: true,
+                onViewLastDeployJournal = actions.onViewLastDeployJournal,
+                onBuildFullRedeployPlan = actions.onBuildFullRedeployPlan,
+                onRequestForceFullRedeploy = actions.onRequestForceFullRedeploy,
+                onMarkDeployRecoveryReviewed = actions.onMarkDeployRecoveryReviewed
+            )
             }
         }
-        }
+    }
+
+    SuiteSettingsSheet(
+        visible = settingsVisible,
+        onDismiss = { settingsVisible = false },
+        title = "Advanced settings"
+    ) {
+        DeploymentSettingsCard(
+            selectedDataPathText = state.selectedDataPathText,
+            selectedRootPathText = state.selectedRootPathText,
+            portFolderPath = state.portFolderPath,
+            portFolderValidationMessage = state.portFolderValidationMessage,
+            secondScreenEnabled = state.secondScreenEnabled,
+            onPickTargetFolder = actions.onPickTargetFolder,
+            onSaveSettings = actions.onSaveSettings,
+            onToggleSecondScreen = actions.onToggleSecondScreen
+        )
+
+        SuiteDetailRow("Version", state.versionLabel)
+
+        DmlButtons.Secondary(
+            text = "App info & developer options",
+            onClick = {
+                settingsVisible = false
+                actions.onVersionTap()
+            },
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        QuickStartCard()
+    }
+
+    if (state.showDeployRecoveryDialog) {
+        AlertDialog(
+            onDismissRequest = actions.onCloseDeployRecoveryDetails,
+            title = {
+                Text("Recovery Details")
+            },
+            text = {
+                Text(
+                    state.deployRecoveryWarningText,
+                    modifier = Modifier.verticalScroll(rememberScrollState())
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = actions.onCloseDeployRecoveryDetails) {
+                    Text("Close")
+                }
+            }
+        )
     }
 }
 
@@ -392,8 +439,6 @@ fun DroidModLoaderScreen(
     state: DashboardUiState,
     actions: DashboardActions
 ) {
-    val dashboardScrollState = rememberScrollState()
-
     if (state.allFilesAccessRequired && !state.allFilesAccessGranted) {
         AllFilesAccessDialog(
             onOpenSettings = actions.onRequestAllFilesAccess
@@ -453,8 +498,7 @@ fun DroidModLoaderScreen(
 
     MainDashboardScreen(
         state = state,
-        actions = actions,
-        scrollState = dashboardScrollState
+        actions = actions
     )
 
     if (state.showProfileDialog) {
@@ -517,8 +561,8 @@ fun DroidModLoaderScreen(
             text = {
                 Text(
                     "This will rewrite every currently managed file for this profile.\n\n" +
-                            "It will not intentionally delete unmanaged files, but it can replace files already managed by Droid Mod Loader.\n\n" +
-                            "This is not a repair for an interrupted operation. DML blocks it while an earlier deployment or installation still needs recovery."
+                        "It will not intentionally delete unmanaged files, but it can replace files already managed by Droid Mod Loader.\n\n" +
+                        "This is not a repair for an interrupted operation. DML blocks it while an earlier deployment or installation still needs recovery."
                 )
             },
             confirmButton = {

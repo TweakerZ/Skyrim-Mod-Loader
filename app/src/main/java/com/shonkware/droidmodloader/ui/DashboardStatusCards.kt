@@ -1,65 +1,22 @@
 package com.shonkware.droidmodloader.ui
 
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.shonkware.droidmodloader.ui.theme.DmlButtons
-import com.shonkware.droidmodloader.ui.theme.DmlColors
-import com.shonkware.droidmodloader.ui.theme.DmlDefaults
-import com.shonkware.droidmodloader.ui.workflow.GameCatalog
+import com.skyrimsuite.ui.SuiteCard
+import com.skyrimsuite.ui.SuiteSectionHeader
 
-
-@Composable
-fun HeaderCard(
-    appName: String,
-    versionLabel: String,
-    onVersionTap: () -> Unit
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = DmlDefaults.panelCardColors(),
-        border = BorderStroke(1.dp, DmlColors.BorderDim)
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = appName,
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Spacer(Modifier.height(4.dp))
-
-                Text(
-                    text = versionLabel,
-                    modifier = Modifier.clickable { onVersionTap() },
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-        }
-    }
-}
-
+/**
+ * Compact "what just happened" strip. Everything it used to repeat (profile,
+ * game, deploy target, data/root readiness) is now a chip in the header, so
+ * only the live operation status and summary remain here.
+ */
 @Composable
 fun StatusCard(
     activeProfileName: String,
@@ -71,185 +28,80 @@ fun StatusCard(
     summaryText: String,
     onOpenProfileDialog: () -> Unit
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = DmlDefaults.panelCardColors(),
-        border = BorderStroke(1.dp, DmlColors.BorderDim)
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = "Profile: $activeProfileName",
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    Text(
-                        text = "Game: ${GameCatalog.displayName(selectedGameId)}",
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
-
-                DmlButtons.Secondary(
-                    text = "Manage Profiles",
-                    onClick = onOpenProfileDialog
-                )
-            }
-
+    SuiteCard {
+        Text(
+            text = "Status: $lastOperationStatus",
+            style = MaterialTheme.typography.titleSmall
+        )
+        if (summaryText.isNotBlank()) {
             Text(
-                text = if (realDeployEnabled) {
-                    "Deploy to: Game folders"
-                } else {
-                    "Deploy to: Test folders"
-                },
-                style = MaterialTheme.typography.bodySmall
+                text = summaryText,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-
-            Text(
-                text = if (dataTargetReady) {
-                    "Data folder: selected"
-                } else {
-                    "Data folder: not selected"
-                },
-                style = MaterialTheme.typography.bodySmall
-            )
-
-            Text(
-                text = if (rootTargetReady) {
-                    "Game Root folder: selected"
-                } else {
-                    "Game Root folder: not selected"
-                },
-                style = MaterialTheme.typography.bodySmall
-            )
-
-            if (!rootTargetReady) {
-                Text(
-                    text = "Choose the game's main folder so DML can check it and find its Data folder.",
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-
-            Text("Status: $lastOperationStatus")
-
-            if (summaryText.isNotBlank()) {
-                Text(summaryText)
-            }
         }
+        DmlButtons.Secondary(
+            text = "Manage Profiles",
+            onClick = onOpenProfileDialog,
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }
 
+/**
+ * The old header, status and "install & deploy" cards are gone.
+ *
+ * * the app title now lives in the centered top app bar,
+ * * deployment status is a row of chips under the bar,
+ * * import/deploy actions are the pinned pill buttons at the bottom.
+ *
+ * What remains here is the short in-app help, which lives in the advanced
+ * settings sheet so it does not push the working screen down.
+ */
 @Composable
 fun QuickStartCard() {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = DmlDefaults.panelCardColors(),
-        border = BorderStroke(1.dp, DmlColors.BorderDim)
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            Text("Quick Start", fontWeight = FontWeight.Bold)
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        SuiteSectionHeader(
+            title = "Quick start",
+            subtitle = "The short version of the usual workflow."
+        )
 
-            Text("1. Choose the installed Skyrim folder once.")
-            Text("2. Tap Import Mod Archives and pick one or more zip, 7z or rar files.")
-            Text("3. Review the extracted mods and choose the files you want.")
-            Text("4. Check the read-only ESP/BSA inventory.")
-            Text("5. Choose Deploy Mods to write the enabled mod files.")
-            Text("6. Share logs if something looks wrong.")
+        SuiteCard {
+            Text(
+                text = "1. Choose the installed Skyrim folder once.",
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Text(
+                text = "2. Tap Import Mods and pick one or more zip, 7z or rar files.",
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Text(
+                text = "3. Review the extracted mods and choose the files you want.",
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Text(
+                text = "4. Check the read-only ESP/BSA inventory.",
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Text(
+                text = "5. Tap Deploy Mods to write the enabled mod files.",
+                style = MaterialTheme.typography.bodyMedium
+            )
+            Text(
+                text = "6. Share logs if something looks wrong.",
+                style = MaterialTheme.typography.bodyMedium
+            )
         }
     }
 }
 
+/** Small inset note used at the bottom of the settings sheet. */
 @Composable
-fun MainActionsCard(
-    operationInProgress: Boolean,
-    archiveImportInProgress: Boolean,
-    archiveQueueCount: Int,
-    activeOperationText: String,
-    onInstallMod: () -> Unit,
-    onDisableAllMods: () -> Unit,
-    onEnableAllMods: () -> Unit,
-    onDeployMods: () -> Unit
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = DmlDefaults.panelCardColors(),
-        border = BorderStroke(1.dp, DmlColors.BorderHot)
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            Text("Install & Deploy", fontWeight = FontWeight.Bold)
-
-            DmlButtons.Primary(
-                text = if (archiveImportInProgress) "Importing archive..." else "Import Mod Archives",
-                enabled = !operationInProgress && !archiveImportInProgress,
-                onClick = onInstallMod,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Text(
-                text = "Pick one or more .zip, .7z or .rar files with the Android file picker. " +
-                    "Archives are extracted straight into mod storage and no zip copy is kept.",
-                style = MaterialTheme.typography.bodySmall
-            )
-
-            if (archiveQueueCount > 0) {
-                Text(
-                    text = "$archiveQueueCount archive(s) waiting in the import queue.",
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                DmlButtons.Secondary(
-                    text = "Disable All Mods",
-                    enabled = !operationInProgress,
-                    onClick = onDisableAllMods,
-                    modifier = Modifier.weight(1f)
-                )
-
-                DmlButtons.Secondary(
-                    text = "Enable All Mods",
-                    enabled = !operationInProgress,
-                    onClick = onEnableAllMods,
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
-            DmlButtons.Primary(
-                text = "Deploy Mods",
-                enabled = !operationInProgress,
-                onClick = onDeployMods,
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            if (operationInProgress || archiveImportInProgress) {
-                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
-                Text(
-                    text = when {
-                        archiveImportInProgress && archiveQueueCount > 0 ->
-                            "Importing archives... ($archiveQueueCount queued)"
-                        archiveImportInProgress -> "Importing archives..."
-                        activeOperationText.isNotBlank() -> activeOperationText
-                        else -> "Working..."
-                    },
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-        }
-    }
+fun SettingsFootnote(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.fillMaxWidth()
+    )
 }

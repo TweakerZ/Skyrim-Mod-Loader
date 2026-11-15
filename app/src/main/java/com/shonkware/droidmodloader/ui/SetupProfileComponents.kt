@@ -1,11 +1,9 @@
 package com.shonkware.droidmodloader.ui
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -13,25 +11,26 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.shonkware.droidmodloader.engine.model.GameProfile
-import com.shonkware.droidmodloader.ui.theme.DmlColors
-import com.shonkware.droidmodloader.ui.theme.DmlDefaults
 import com.shonkware.droidmodloader.ui.workflow.GameCatalog
+import com.skyrimsuite.ui.SuiteBarAction
+import com.skyrimsuite.ui.SuiteCard
+import com.skyrimsuite.ui.SuiteChip
+import com.skyrimsuite.ui.SuiteChipTone
+import com.skyrimsuite.ui.SuitePrimaryButton
+import com.skyrimsuite.ui.SuiteScreen
+import com.skyrimsuite.ui.SuiteTextField
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun GameOptionChips(
     gameOptions: List<String>,
@@ -40,7 +39,10 @@ private fun GameOptionChips(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         gameOptions.chunked(2).forEach { rowGames ->
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
                 rowGames.forEach { gameId ->
                     FilterChip(
                         selected = selectedGameId == gameId,
@@ -59,87 +61,79 @@ fun SetupScreen(
     state: DashboardUiState,
     actions: DashboardActions
 ) {
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = DmlDefaults.panelCardColors(),
-                border = BorderStroke(1.dp, DmlColors.BorderDim)
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text("First Setup", fontWeight = FontWeight.Bold)
-                    Text("Create your first game profile before using the mod manager.")
+    SuiteScreen(
+        title = "Droid Mod Loader",
+        subtitle = "First setup",
+        chips = listOf(
+            SuiteChip("No profile yet", SuiteChipTone.Warning),
+            SuiteChip(GameCatalog.displayName(state.setupGameId))
+        ),
+        primaryAction = SuiteBarAction(
+            label = "Create Profile",
+            onClick = actions.onCompleteSetup,
+            enabled = state.setupInstallationResolved
+        )
+    ) {
+        SuiteCard {
+            Text(
+                text = "Create your first game profile",
+                style = MaterialTheme.typography.titleLarge
+            )
+            Text(
+                text = "A profile keeps one game installation, its mods and its load order together.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
 
-                    OutlinedTextField(
-                        value = state.profileNameText,
-                        onValueChange = actions.onProfileNameChanged,
-                        label = { Text("Profile Name") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
+            SuiteTextField(
+                value = state.profileNameText,
+                onValueChange = actions.onProfileNameChanged,
+                label = "Profile name"
+            )
 
-                    GameOptionChips(
-                        gameOptions = state.gameOptions,
-                        selectedGameId = state.setupGameId,
-                        onSelectGame = actions.onSetupGameChanged
-                    )
+            Text(
+                text = "Game",
+                style = MaterialTheme.typography.titleSmall
+            )
 
-                    Text(
-                        "Game folder: " + state.setupRootTargetPathText.ifBlank {
-                            "No folder selected"
-                        },
-                        style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = "Choose the installed game's main folder. DML checks it and finds the Data folder automatically.",
-                        style = MaterialTheme.typography.bodySmall
-                    )
+            GameOptionChips(
+                gameOptions = state.gameOptions,
+                selectedGameId = state.setupGameId,
+                onSelectGame = actions.onSetupGameChanged
+            )
+        }
 
-                    Button(
-                        onClick = actions.onPickTargetFolder,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Choose Game Folder")
-                    }
+        SuiteCard {
+            Text(
+                text = "Game folder",
+                style = MaterialTheme.typography.titleLarge
+            )
 
-                    Text(
-                        "Data folder: " + state.setupTargetPathText.ifBlank {
-                            "Not detected yet"
-                        },
-                        style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+            com.skyrimsuite.ui.SuitePathRow(
+                title = "Installed game folder",
+                path = state.setupRootTargetPathText,
+                onChange = actions.onPickTargetFolder,
+                supportingText = "DML checks the folder and finds its Data folder automatically."
+            )
 
-                    Text(
-                        text = if (state.setupInstallationResolved) {
-                            "Game installation validated."
-                        } else {
-                            "Select a valid game folder to continue."
-                        },
-                        style = MaterialTheme.typography.bodySmall
-                    )
+            com.skyrimsuite.ui.SuitePathRow(
+                title = "Data folder (detected)",
+                path = state.setupTargetPathText
+            )
 
-                    Button(
-                        onClick = actions.onCompleteSetup,
-                        enabled = state.setupInstallationResolved,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Create Profile")
-                    }
+            Text(
+                text = if (state.setupInstallationResolved) {
+                    "Game installation validated."
+                } else {
+                    "Select a valid game folder to continue."
+                },
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (state.setupInstallationResolved) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
                 }
-            }
+            )
         }
     }
 }
@@ -177,9 +171,9 @@ fun ProfileManagerDialog(
                 modifier = Modifier
                     .heightIn(max = 520.dp)
                     .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-                Text("Switch Profile", fontWeight = FontWeight.Bold)
+                Text("Switch Profile", style = MaterialTheme.typography.titleLarge)
 
                 if (profiles.isEmpty()) {
                     Text("No profiles found.")
@@ -196,9 +190,7 @@ fun ProfileManagerDialog(
                                 label = { Text(profile.profileName) }
                             )
 
-                            Button(
-                                onClick = { onDeleteProfile(profile.profileId) }
-                            ) {
+                            TextButton(onClick = { onDeleteProfile(profile.profileId) }) {
                                 Text("Delete")
                             }
                         }
@@ -207,13 +199,12 @@ fun ProfileManagerDialog(
 
                 Spacer(Modifier.height(8.dp))
 
-                Text("Add Profile", fontWeight = FontWeight.Bold)
+                Text("Add Profile", style = MaterialTheme.typography.titleLarge)
 
-                OutlinedTextField(
+                SuiteTextField(
                     value = newProfileNameText,
                     onValueChange = onNewProfileNameChanged,
-                    label = { Text("Profile Name") },
-                    modifier = Modifier.fillMaxWidth()
+                    label = "Profile name"
                 )
 
                 GameOptionChips(
@@ -222,31 +213,15 @@ fun ProfileManagerDialog(
                     onSelectGame = onNewProfileGameChanged
                 )
 
-                Text(
-                    "Game folder: " + newProfileRootPathText.ifBlank {
-                        "No folder selected"
-                    },
-                    style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = "Choose the installed game's main folder. DML checks it and finds the Data folder automatically.",
-                    style = MaterialTheme.typography.bodySmall
+                com.skyrimsuite.ui.SuitePathRow(
+                    title = "Game folder",
+                    path = newProfileRootPathText,
+                    onChange = onPickNewProfileTargetFolder
                 )
 
-                Button(
-                    onClick = onPickNewProfileTargetFolder,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Choose Game Folder")
-                }
-
-                Text(
-                    "Data folder: " + newProfileDataPathText.ifBlank {
-                        "Not detected yet"
-                    },
-                    style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
-                    color = MaterialTheme.colorScheme.onSurface
+                com.skyrimsuite.ui.SuitePathRow(
+                    title = "Data folder (detected)",
+                    path = newProfileDataPathText
                 )
 
                 Text(
@@ -258,13 +233,12 @@ fun ProfileManagerDialog(
                     style = MaterialTheme.typography.bodySmall
                 )
 
-                Button(
+                SuitePrimaryButton(
+                    text = "Create Profile",
                     onClick = onCreateAdditionalProfile,
                     enabled = newProfileInstallationResolved,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Create Profile")
-                }
+                    modifier = Modifier.padding(top = 4.dp)
+                )
             }
         }
     )

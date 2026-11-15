@@ -1,45 +1,37 @@
 package com.shonkware.droidmodloader.ui.theme
 
-import android.app.Activity
-import android.os.Build
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ColorScheme
-import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Shapes
 import androidx.compose.material3.Text
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.core.view.WindowCompat
+import com.skyrimsuite.ui.theme.SkyrimSuiteTheme
 
+/**
+ * Fixed palettes are no longer used to draw the UI: the app is coloured from
+ * the user's wallpaper through [com.skyrimsuite.ui.theme.SkyrimSuiteTheme].
+ *
+ * [DmlPalettes.CarbonRed] survives because the native launch window and a few
+ * instrumented tests still reference the old splash colour, and because
+ * [DmlColors] has to resolve to *something* if it is ever read outside a theme.
+ */
 enum class DmlThemeId {
     CarbonRed,
     PipBoyGreen,
@@ -74,10 +66,6 @@ data class DmlPalette(
     val textDim: Color
 )
 
-/**
- * Legacy fixed palettes are retained for tests and for the native window
- * splash colour. The live UI is coloured from the Material You scheme.
- */
 object DmlPalettes {
     val CarbonRed = DmlPalette(
         background = Color(0xFF050608),
@@ -209,82 +197,30 @@ object DmlPalettes {
         textDim = Color(0xFF877459)
     )
 
-    fun forTheme(themeId: DmlThemeId): DmlPalette {
-        return when (themeId) {
-            DmlThemeId.CarbonRed -> CarbonRed
-            DmlThemeId.PipBoyGreen -> PipBoyGreen
-            DmlThemeId.SkyrimNordic -> SkyrimNordic
-            DmlThemeId.OblivionGold -> OblivionGold
-            DmlThemeId.FnvAmber -> FnvAmber
-        }
+    fun forTheme(themeId: DmlThemeId): DmlPalette = when (themeId) {
+        DmlThemeId.CarbonRed -> CarbonRed
+        DmlThemeId.PipBoyGreen -> PipBoyGreen
+        DmlThemeId.SkyrimNordic -> SkyrimNordic
+        DmlThemeId.OblivionGold -> OblivionGold
+        DmlThemeId.FnvAmber -> FnvAmber
     }
 }
 
-/** Fallback Material 3 scheme used before Android 12 or when dynamic colour is disabled. */
-private val DmlLightScheme = lightColorScheme(
-    primary = Color(0xFF256A58),
-    onPrimary = Color.White,
-    primaryContainer = Color(0xFFADF2DB),
-    onPrimaryContainer = Color(0xFF00201A),
-    secondary = Color(0xFF4B635B),
-    onSecondary = Color.White,
-    secondaryContainer = Color(0xFFCDE8DE),
-    onSecondaryContainer = Color(0xFF072019),
-    tertiary = Color(0xFF42627B),
-    onTertiary = Color.White,
-    tertiaryContainer = Color(0xFFC9E6FF),
-    onTertiaryContainer = Color(0xFF001E30),
-    background = Color(0xFFF5FBF6),
-    onBackground = Color(0xFF171D1A),
-    surface = Color(0xFFF5FBF6),
-    onSurface = Color(0xFF171D1A),
-    surfaceVariant = Color(0xFFDAE5DE),
-    onSurfaceVariant = Color(0xFF3F4944),
-    outline = Color(0xFF6F7973),
-    outlineVariant = Color(0xFFBEC9C2),
-    error = Color(0xFFBA1A1A),
-    onError = Color.White,
-    errorContainer = Color(0xFFFFDAD6),
-    onErrorContainer = Color(0xFF410002)
-)
-
-private val DmlDarkScheme = darkColorScheme(
-    primary = Color(0xFF91D5BF),
-    onPrimary = Color(0xFF00382D),
-    primaryContainer = Color(0xFF065041),
-    onPrimaryContainer = Color(0xFFADF2DB),
-    secondary = Color(0xFFB1CCC2),
-    onSecondary = Color(0xFF1D352E),
-    secondaryContainer = Color(0xFF334B44),
-    onSecondaryContainer = Color(0xFFCDE8DE),
-    tertiary = Color(0xFFAACBE7),
-    onTertiary = Color(0xFF0B344B),
-    tertiaryContainer = Color(0xFF294B63),
-    onTertiaryContainer = Color(0xFFC9E6FF),
-    background = Color(0xFF0F1512),
-    onBackground = Color(0xFFDFE4DF),
-    surface = Color(0xFF0F1512),
-    onSurface = Color(0xFFDFE4DF),
-    surfaceVariant = Color(0xFF3F4944),
-    onSurfaceVariant = Color(0xFFBEC9C2),
-    outline = Color(0xFF89938D),
-    outlineVariant = Color(0xFF3F4944),
-    error = Color(0xFFFFB4AB),
-    onError = Color(0xFF690005),
-    errorContainer = Color(0xFF93000A),
-    onErrorContainer = Color(0xFFFFDAD6)
-)
-
+/**
+ * Translates the live Material You scheme into the old palette shape so the
+ * existing screen code keeps compiling while looking like the rest of the suite.
+ * Outlines are deliberately transparent: the suite uses tonal cards, not borders.
+ */
 private fun schemeToPalette(scheme: ColorScheme): DmlPalette = DmlPalette(
     background = scheme.background,
     backgroundRaised = scheme.surfaceContainerLowest,
 
-    surface = scheme.surfaceContainer,
+    surface = scheme.surfaceContainerLow,
     surfaceRaised = scheme.surfaceContainerHigh,
     surfacePanel = scheme.surfaceContainerHighest,
     buttonSurface = scheme.secondaryContainer,
 
-    borderDim = scheme.outlineVariant,
+    borderDim = Color.Transparent,
     borderHot = scheme.primary,
     glow = scheme.primary,
 
@@ -301,9 +237,7 @@ private fun schemeToPalette(scheme: ColorScheme): DmlPalette = DmlPalette(
     textDim = scheme.outline
 )
 
-val LocalDmlPalette = staticCompositionLocalOf {
-    DmlPalettes.CarbonRed
-}
+val LocalDmlPalette = staticCompositionLocalOf { DmlPalettes.CarbonRed }
 
 object DmlColors {
     val Background: Color
@@ -361,90 +295,34 @@ object DmlColors {
         @Composable get() = LocalDmlPalette.current.textDim
 }
 
-/** Loot Android style: rounded corners for cards and buttons. */
-private val DmlShapes = Shapes(
-    extraSmall = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
-    small = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
-    medium = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
-    large = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
-    extraLarge = androidx.compose.foundation.shape.RoundedCornerShape(12.dp)
-)
-
+/**
+ * The app is themed from the shared suite theme, including wallpaper colour.
+ * Signature kept stable for existing call sites and instrumented tests.
+ */
 @Composable
 fun DmlTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = false,
+    dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
-    val context = LocalContext.current
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ->
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-
-        darkTheme -> DmlDarkScheme
-        else -> DmlLightScheme
-    }
-    val palette = schemeToPalette(colorScheme)
-    val view = LocalView.current
-
-    if (!view.isInEditMode) {
-        SideEffect {
-            val window = (view.context as? Activity)?.window ?: return@SideEffect
-            window.statusBarColor = colorScheme.background.toArgb()
-            window.navigationBarColor = colorScheme.background.toArgb()
-            WindowCompat.getInsetsController(window, view).apply {
-                isAppearanceLightStatusBars = !darkTheme
-                isAppearanceLightNavigationBars = !darkTheme
-            }
+    SkyrimSuiteTheme(darkTheme = darkTheme, dynamicColor = dynamicColor) {
+        CompositionLocalProvider(LocalDmlPalette provides schemeToPalette(MaterialTheme.colorScheme)) {
+            content()
         }
-    }
-
-    CompositionLocalProvider(
-        LocalDmlPalette provides palette
-    ) {
-        MaterialTheme(
-            colorScheme = colorScheme,
-            typography = MaterialTheme.typography,
-            shapes = DmlShapes,
-            content = content
-        )
     }
 }
 
+/** Flat tonal background; the old radial glow fought with dynamic colour. */
 @Composable
 fun DmlMatteBackground(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
-    val palette = LocalDmlPalette.current
-
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(palette.background)
+            .background(MaterialTheme.colorScheme.background)
     ) {
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            drawRect(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        palette.backgroundRaised,
-                        palette.background
-                    )
-                )
-            )
-
-            drawRect(
-                brush = Brush.radialGradient(
-                    colors = listOf(
-                        palette.primary.copy(alpha = 0.10f),
-                        Color.Transparent
-                    ),
-                    center = Offset(size.width * 0.82f, size.height * 0.04f),
-                    radius = size.width * 0.9f
-                )
-            )
-        }
-
         content()
     }
 }
@@ -452,7 +330,7 @@ fun DmlMatteBackground(
 object DmlDefaults {
     @Composable
     fun panelCardColors() = CardDefaults.cardColors(
-        containerColor = MaterialTheme.colorScheme.surface,
+        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         contentColor = MaterialTheme.colorScheme.onSurface
     )
 
@@ -469,34 +347,25 @@ fun DmlGlowPanel(
     hot: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val palette = LocalDmlPalette.current
-
     Card(
         modifier = modifier,
+        shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(
-            containerColor = if (hot) palette.surfaceRaised else palette.surface,
-            contentColor = palette.text
+            containerColor = if (hot) {
+                MaterialTheme.colorScheme.surfaceContainerHigh
+            } else {
+                MaterialTheme.colorScheme.surfaceContainerLow
+            },
+            contentColor = MaterialTheme.colorScheme.onSurface
         ),
-        border = if (hot) BorderStroke(1.dp, palette.borderHot) else null
+        border = if (hot) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .drawBehind {
-                    drawRect(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                Color.White.copy(alpha = 0.035f),
-                                Color.Transparent
-                            )
-                        )
-                    )
-                }
-        ) {
+        Box(modifier = Modifier.fillMaxSize()) {
             content()
         }
     }
 }
+
 object DmlButtons {
     @Composable
     fun Primary(
@@ -508,17 +377,17 @@ object DmlButtons {
         Button(
             onClick = onClick,
             enabled = enabled,
-            modifier = modifier.heightIn(min = 50.dp),
-            shape = MaterialTheme.shapes.small,
+            modifier = modifier.heightIn(min = 56.dp),
+            shape = CircleShape,
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
                 disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
                 disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
             ),
-            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp)
+            contentPadding = PaddingValues(horizontal = 26.dp, vertical = 16.dp)
         ) {
-            Text(text, fontWeight = FontWeight.Medium)
+            Text(text, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleMedium)
         }
     }
 
@@ -532,17 +401,17 @@ object DmlButtons {
         Button(
             onClick = onClick,
             enabled = enabled,
-            modifier = modifier.heightIn(min = 48.dp),
-            shape = MaterialTheme.shapes.small,
+            modifier = modifier.heightIn(min = 52.dp),
+            shape = CircleShape,
             colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.surface,
-                contentColor = MaterialTheme.colorScheme.primary,
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
                 disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
                 disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
             ),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 10.dp)
+            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 14.dp)
         ) {
-            Text(text, fontWeight = FontWeight.Medium)
+            Text(text, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleSmall)
         }
     }
 
@@ -556,17 +425,17 @@ object DmlButtons {
         Button(
             onClick = onClick,
             enabled = enabled,
-            modifier = modifier.heightIn(min = 50.dp),
-            shape = MaterialTheme.shapes.small,
+            modifier = modifier.heightIn(min = 56.dp),
+            shape = CircleShape,
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.errorContainer,
                 contentColor = MaterialTheme.colorScheme.onErrorContainer,
                 disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
                 disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
             ),
-            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 12.dp)
+            contentPadding = PaddingValues(horizontal = 26.dp, vertical = 16.dp)
         ) {
-            Text(text, fontWeight = FontWeight.Medium)
+            Text(text, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleSmall)
         }
     }
 }

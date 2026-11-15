@@ -47,7 +47,6 @@ fun ModsCard(
     onMoveModToPosition: (String, Int) -> Unit,
     onDeleteMod: (Mod) -> Unit,
     onViewModFiles: (String) -> Unit,
-    onOpenFullscreen: () -> Unit,
     onOpenOverwriteFolder: () -> Unit
 ) {
     Card(
@@ -59,18 +58,7 @@ fun ModsCard(
             modifier = Modifier.padding(12.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("Mods", fontWeight = FontWeight.Bold)
-
-                DmlButtons.Secondary(
-                    text = "Fullscreen",
-                    onClick = onOpenFullscreen
-                )
-            }
+            Text("Mods", fontWeight = FontWeight.Bold)
 
             DmlButtons.Secondary(
                 text = "Open Overwrite Folder",
