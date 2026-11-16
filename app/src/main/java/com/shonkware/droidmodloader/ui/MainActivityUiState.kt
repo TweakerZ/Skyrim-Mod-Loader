@@ -276,7 +276,7 @@ internal class MutableMainActivityUiState : MainActivityUiState {
         )
 
         return DashboardUiState(
-            appName = "Skyrim Android Mod Loader",
+            appName = "Skyrim Mod Loader",
             versionLabel = BuildConfig.VERSION_NAME,
             developerModeEnabled = developerModeEnabled,
             lastOperationStatus = lastOperationStatus,

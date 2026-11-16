@@ -38,3 +38,7 @@ private-notes/
 /dist/
 /nexus-upload/
 /release-artifacts/
+
+# Local screenshots and generated support reports
+/ss/
+dml-support-report-*.txt
