@@ -1,7 +1,3 @@
-<p align="center">
-  <img src="assets/source/icons/icon-dml.png" width="128" alt="Skyrim Mod Loader app icon">
-</p>
-
 <h1 align="center">Skyrim Mod Loader (SML)</h1>
 
 <p align="center"><strong>A Skyrim Legendary Edition fork of Droid Mod Loader for the Skyrim static Android port.</strong></p>
