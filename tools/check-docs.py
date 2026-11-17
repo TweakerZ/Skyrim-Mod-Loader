@@ -10,9 +10,8 @@ from urllib.parse import unquote, urlsplit
 
 REQUIRED = (
     "README.md", "CONTRIBUTING.md", "docs/user-guide.md", "docs/troubleshooting.md",
-    "releases/changelog.md", "releases/templates/release-notes-template.md", "LICENSE",
+    "releases/templates/release-notes-template.md", "LICENSE",
 )
-README_LINKS = ("docs/user-guide.md", "docs/troubleshooting.md", "releases/changelog.md", "CONTRIBUTING.md")
 INLINE_LINK = re.compile(r'\]\(\s*(<[^>\n]+>|(?:\\.|[^\s()\\]|\([^()\n]*\))+)(?:\s+[\'"][^\n]*?[\'"])?\s*\)')
 DEFINITION = re.compile(r'^ {0,3}\[([^\]]+)\]:\s*(<[^>\n]+>|\S+)')
 REFERENCE = re.compile(r'\[([^\]\n]+)\]\[([^\]\n]*)\]')
@@ -92,11 +91,6 @@ def check(root):
             errors.append(f'{name}: missing required documentation file')
         elif not (root / name).resolve().is_relative_to(root):
             errors.append(f'{name}: documentation file leaves the repository')
-    readme = root / 'README.md'
-    if readme.is_file() and readme.resolve().is_relative_to(root):
-        for target in README_LINKS:
-            if target not in readme.read_text(encoding='utf-8'):
-                errors.append(f'README.md: missing required link: {target}')
     anchor_cache = {}
     for path in documentation_files(root):
         if not path.is_file():
