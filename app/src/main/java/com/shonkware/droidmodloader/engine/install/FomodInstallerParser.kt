@@ -628,9 +628,9 @@ class FomodInstallerParser {
         val raw = file.readBytes()
         for (enc in encodingCandidates(raw)) {
             val decoded = runCatching { String(raw, Charset.forName(enc)) }.getOrNull()
-            if (decoded != null) return decoded
+            if (decoded != null) return decoded.trimStart('\uFEFF')
         }
-        return String(raw, Charset.forName("ISO-8859-1"))
+        return String(raw, Charset.forName("ISO-8859-1")).trimStart('\uFEFF')
     }
 
     private fun encodingCandidates(raw: ByteArray): List<String> {

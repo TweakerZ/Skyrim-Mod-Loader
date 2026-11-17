@@ -52,8 +52,17 @@ class ArchiveEntryWriter internal constructor(
         private const val TAG = "DroidModLoader"
     }
 
-    private val pathsByComparisonKey =
+    /**
+     * First spelling seen for each path component, keyed by the canonical
+     * parent chain plus the normalized component name. Archive paths merge
+     * case-insensitively the way Windows extractors do, so mods that ship
+     * both `meshes` and `Meshes` land in one folder instead of failing.
+     */
+    private val canonicalChildSpellings =
         mutableMapOf<String, String>()
+
+    private val registeredRawPaths =
+        mutableSetOf<String>()
 
     private var acceptedEntryCount = 0
     private var totalBytesWritten = 0L
@@ -130,13 +139,29 @@ class ArchiveEntryWriter internal constructor(
         )
 
         if (entry.outputFile.exists()) {
-            throw ArchiveReadException(
-                code =
-                    ArchiveReadFailureCode.DUPLICATE_ENTRY_PATH,
-                message =
-                    "Archive output already exists for entry: " +
+            if (!entry.caseCollision) {
+                throw ArchiveReadException(
+                    code =
+                        ArchiveReadFailureCode.DUPLICATE_ENTRY_PATH,
+                    message =
+                        "Archive output already exists for entry: " +
+                                entry.relativePath
+                )
+            }
+
+            if (entry.outputFile.isDirectory) {
+                throw ioFailure(
+                    "Archive file collides with an extracted directory: " +
                             entry.relativePath
-            )
+                )
+            }
+
+            if (!entry.outputFile.delete()) {
+                throw ioFailure(
+                    "Could not replace the case-colliding file: " +
+                            entry.relativePath
+                )
+            }
         }
 
         ensureUsableSpace(
@@ -237,10 +262,12 @@ class ArchiveEntryWriter internal constructor(
             )
         }
 
+        val canonical = canonicalizePath(relativePath)
+
         val outputFile = try {
             ArchiveEntryPath.safeResolve(
                 root = outputDir,
-                relativePath = relativePath
+                relativePath = canonical.path
             )
         } catch (exception: IOException) {
             throw ArchiveReadException(
@@ -256,38 +283,68 @@ class ArchiveEntryWriter internal constructor(
         registerEntryPath(relativePath)
 
         return ResolvedArchiveEntry(
-            relativePath = relativePath,
-            outputFile = outputFile
+            relativePath = canonical.path,
+            outputFile = outputFile,
+            caseCollision = canonical.caseCollision
         )
+    }
+
+    /**
+     * Maps every path component to the first spelling seen for it. Later
+     * entries that differ only by case or Unicode normalization write into
+     * the same tree, so `meshes` and `Meshes` become one folder.
+     */
+    private fun canonicalizePath(
+        relativePath: String
+    ): CanonicalPath {
+        val parts = relativePath.split('/')
+        val resolved = ArrayList<String>(parts.size)
+        var parentKey = ""
+        var caseCollision = false
+
+        for (part in parts) {
+            val partKey = comparisonKey(part)
+            val childKey = parentKey + '\u0000' + partKey
+            val canonicalPart =
+                canonicalChildSpellings[childKey]
+
+            if (canonicalPart == null) {
+                canonicalChildSpellings[childKey] = part
+                resolved.add(part)
+            } else {
+                if (canonicalPart != part) {
+                    caseCollision = true
+                }
+                resolved.add(canonicalPart)
+            }
+
+            parentKey = childKey
+        }
+
+        return CanonicalPath(
+            path = resolved.joinToString("/"),
+            caseCollision = caseCollision
+        )
+    }
+
+    private fun comparisonKey(
+        value: String
+    ): String {
+        return Normalizer
+            .normalize(value, Normalizer.Form.NFC)
+            .lowercase(Locale.ROOT)
     }
 
     private fun registerEntryPath(
         relativePath: String
     ) {
-        val comparisonKey = Normalizer
-            .normalize(
-                relativePath,
-                Normalizer.Form.NFC
-            )
-            .lowercase(Locale.ROOT)
-
-        val existingPath =
-            pathsByComparisonKey[comparisonKey]
-
-        if (existingPath != null) {
-            val failureCode =
-                if (existingPath == relativePath) {
-                    ArchiveReadFailureCode
-                        .DUPLICATE_ENTRY_PATH
-                } else {
-                    ArchiveReadFailureCode.CASE_COLLISION
-                }
-
+        if (!registeredRawPaths.add(relativePath)) {
             throw ArchiveReadException(
-                code = failureCode,
+                code =
+                    ArchiveReadFailureCode.DUPLICATE_ENTRY_PATH,
                 message =
                     "Archive entries resolve to the same output path: " +
-                            "$existingPath and $relativePath"
+                            relativePath
             )
         }
 
@@ -305,8 +362,6 @@ class ArchiveEntryWriter internal constructor(
             )
         }
 
-        pathsByComparisonKey[comparisonKey] =
-            relativePath
         acceptedEntryCount += 1
     }
 
@@ -428,7 +483,13 @@ class ArchiveEntryWriter internal constructor(
 
     private data class ResolvedArchiveEntry(
         val relativePath: String,
-        val outputFile: File
+        val outputFile: File,
+        val caseCollision: Boolean
+    )
+
+    private data class CanonicalPath(
+        val path: String,
+        val caseCollision: Boolean
     )
 
     private inner class LimitEnforcingOutputStream(

@@ -445,6 +445,42 @@ class FomodInstallerParserTest {
         )
     }
 
+    @Test
+    fun `parses module config with a UTF-8 BOM`() {
+        val fixture = fixture(
+            xml = """
+                <config>
+                  <moduleName>BOM Test</moduleName>
+                  <installSteps order="Explicit">
+                    <installStep name="Installation">
+                      <optionalFileGroups order="Explicit">
+                        <group name="Installation" type="SelectExactlyOne">
+                          <plugins order="Explicit">
+                            <plugin name="Core">
+                              <description>Core</description>
+                              <files>
+                                <file source="meshes/body.nif" destination="meshes/body.nif" />
+                              </files>
+                              <typeDescriptor><type name="Required" /></typeDescriptor>
+                            </plugin>
+                          </plugins>
+                        </group>
+                      </optionalFileGroups>
+                    </installStep>
+                  </installSteps>
+                </config>
+            """.trimIndent(),
+            files = listOf("meshes/body.nif"),
+            encoding = Charsets.UTF_8,
+            bom = true
+        )
+
+        val plan = fixture.parse()
+
+        assertEquals("BOM Test", plan.displayName)
+        assertEquals(1, plan.groups.size)
+    }
+
     private data class Fixture(
         val root: File,
         val config: File
@@ -452,11 +488,23 @@ class FomodInstallerParserTest {
         fun parse(): InstallerPlan = FomodInstallerParser().parse(root, config, "Example")
     }
 
-    private fun fixture(xml: String, files: List<String>): Fixture {
+    private fun fixture(
+        xml: String,
+        files: List<String>,
+        encoding: java.nio.charset.Charset = Charsets.UTF_16,
+        bom: Boolean = false
+    ): Fixture {
         val root = temporary.newFolder()
         val fomod = File(root, "fomod").apply { mkdirs() }
         val config = File(fomod, "ModuleConfig.xml")
-        config.writeBytes(xml.toByteArray(Charsets.UTF_16))
+        val body = xml.toByteArray(encoding)
+        config.writeBytes(
+            if (bom && encoding == Charsets.UTF_8) {
+                byteArrayOf(0xEF.toByte(), 0xBB.toByte(), 0xBF.toByte()) + body
+            } else {
+                body
+            }
+        )
         files.forEach { path ->
             File(root, path).apply {
                 parentFile?.mkdirs()

@@ -64,11 +64,11 @@ class Rar5ArchiveReaderTest {
         }
     }
 
-    @Test fun `case and normalized Unicode collisions use existing writer checks`() {
+    @Test fun `case and normalized Unicode collisions merge into the first spelling`() {
         for (names in listOf("A" to "a", "é" to "e\u0301")) {
-            refused(ArchiveReadFailureCode.CASE_COLLISION) {
-                read(RarTestArchives.rar5(RarTestArchives.entry(names.first), RarTestArchives.entry(names.second)))
-            }
+            val out = read(RarTestArchives.rar5(RarTestArchives.entry(names.first, "first".toByteArray()), RarTestArchives.entry(names.second, "second".toByteArray())))
+            assertEquals(listOf(names.first), out.list()!!.toList())
+            assertEquals("second", File(out, names.first).readText())
         }
     }
 

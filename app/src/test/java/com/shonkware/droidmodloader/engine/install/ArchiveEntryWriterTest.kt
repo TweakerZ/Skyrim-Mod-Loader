@@ -148,7 +148,7 @@ class ArchiveEntryWriterTest {
     }
 
     @Test
-    fun `rejects case-insensitive path collisions`() {
+    fun `merges case-insensitive path collisions`() {
         withFixture("case-collision") { fixture ->
             val writer = fixture.writer()
 
@@ -156,21 +156,63 @@ class ArchiveEntryWriterTest {
                 it.write("first".toByteArray())
             }
 
-            val failure = expectReadFailure {
-                writer.writeFile("textures/a.dds") {
-                    it.write("second".toByteArray())
-                }
+            writer.writeFile("textures/a.dds") {
+                it.write("second".toByteArray())
             }
 
             assertEquals(
-                ArchiveReadFailureCode.CASE_COLLISION,
-                failure.code
+                "second",
+                File(
+                    fixture.outputDir,
+                    "Textures/A.dds"
+                ).readText()
+            )
+            assertFalse(
+                File(
+                    fixture.outputDir,
+                    "textures"
+                ).exists()
             )
         }
     }
 
     @Test
-    fun `rejects unicode-normalized path collisions`() {
+    fun `merges mixed-case sibling folders into one tree`() {
+        withFixture("mixed-case-folders") { fixture ->
+            val writer = fixture.writer()
+
+            writer.writeDirectory("meshes/")
+            writer.writeDirectory("Meshes/")
+            writer.writeFile("meshes/actor/body.nif") {
+                it.write("lower".toByteArray())
+            }
+            writer.writeFile("Meshes/armor/boots.nif") {
+                it.write("upper".toByteArray())
+            }
+
+            assertTrue(
+                File(
+                    fixture.outputDir,
+                    "meshes/actor/body.nif"
+                ).isFile
+            )
+            assertTrue(
+                File(
+                    fixture.outputDir,
+                    "meshes/armor/boots.nif"
+                ).isFile
+            )
+            assertFalse(
+                File(
+                    fixture.outputDir,
+                    "Meshes"
+                ).exists()
+            )
+        }
+    }
+
+    @Test
+    fun `merges unicode-normalized path collisions`() {
         withFixture("unicode-collision") { fixture ->
             val writer = fixture.writer()
 
@@ -180,17 +222,18 @@ class ArchiveEntryWriterTest {
                 it.write("first".toByteArray())
             }
 
-            val failure = expectReadFailure {
-                writer.writeFile(
-                    "Data/Cafe\u0301.txt"
-                ) {
-                    it.write("second".toByteArray())
-                }
+            writer.writeFile(
+                "Data/Cafe\u0301.txt"
+            ) {
+                it.write("second".toByteArray())
             }
 
             assertEquals(
-                ArchiveReadFailureCode.CASE_COLLISION,
-                failure.code
+                "second",
+                File(
+                    fixture.outputDir,
+                    "Data/Caf\u00E9.txt"
+                ).readText()
             )
         }
     }
