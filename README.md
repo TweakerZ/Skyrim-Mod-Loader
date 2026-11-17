@@ -1,103 +1,66 @@
-<h1 align="center">Skyrim Mod Loader (SML)</h1>
+# Skyrim Mod Loader (Android)
 
-<p align="center"><strong>A Skyrim Legendary Edition fork of Droid Mod Loader for the Skyrim static Android port.</strong></p>
+An Android mod manager for Skyrim Legendary Edition on a static Skyrim LE Android port. A fork of [Droid Mod Loader](https://github.com/CyberShonk/DroidModLoader) (DML) by CyberShonk, adapted to the port's file layout and rebuilt around a Material You interface.
 
-Skyrim Mod Loader (SML) is a fork of Droid Mod Loader (DML) that targets the Skyrim
-Android static port. It keeps DML's proven extraction, installer, plugin and
-deployment pipeline, but uses a Material You single-page interface, the Android
-system multi-file picker, and a Skyrim Legendary Edition plugin list that can be
-edited from the dashboard. Imported archives are staged only long enough to
-extract them; no permanent zip copy is kept.
+![Main screen](docs/screenshot-main.png)
 
-**Droid Mod Loader (DML)** by CyberShonk manages Bethesda game mods for Windows
-compatibility environments hosted on Android, such as Winlator, GameHub and
-similar tools. It keeps installed mods separate, tracks profiles and plugin state,
-and deploys a resolved mod setup to selected game folders.
+## What it does
 
-**Skyrim Mod Loader (SML)** is for the Skyrim static Android port. It builds on
-DML's foundation and adapts it to the static port's file layout and plugin
-handling.
+- Imports `.zip`, `.7z` and RAR5 mod archives from the Android file picker, including FOMOD installers with option previews.
+- Manages installed mods: enable or disable, reorder by priority, set a load position from `001` through the last mod, and delete.
+- Editable ESP/ESM/ESL plugin list with enable/disable and Up/Down ordering. Locked official Skyrim masters stay pinned at the top.
+- Detects the port folder at `<game root>/port` and writes `Plugins.txt` and `loadorder.txt` into it.
+- Deploys the resolved mod setup to the game folder and reconciles plugins after installs, removals, toggles and deploys.
+- Companion app: [LOOT Android](https://github.com/TweakerZ/loot-android) sorts plugin load order using the same `Plugins.txt` and `loadorder.txt`.
 
-The Skyrim static Android port is created by https://github.com/ttom795/Skyrim_Android/.
+![Mods](docs/screenshot-mods.png)
 
-**LOOT Android** by TweakerZ is a companion load-order sorting app for SML. It
-reads and writes the same `Plugins.txt` and `loadorder.txt` that SML manages,
-and sorts plugins using the real libloot engine: https://github.com/TweakerZ/loot-android
+## Requirements
 
-> [!WARNING]
-> SML is beta software that can write to game folders. Back up important game
-> files before testing a new build or deployment setup.
+- Android 11 (API 30) or newer.
+- All files access. SML reads and writes real game folders on shared storage.
+- A Skyrim Legendary Edition static Android port that exposes its game folder on shared storage.
 
-> [!NOTE]
-> Yes, AI was used in building this.
+## Usage
 
-## Current support
+1. Download `SkyrimModLoader-<version>.apk` from [Releases](https://github.com/TweakerZ/Skyrim-Mod-Loader/releases) and install it.
+2. Choose your Skyrim main folder. SML validates it, finds the Data folder and detects the port folder when present.
+3. Import mod archives, then enable and order your mods and plugins.
+4. **Deploy Mods** copies the mod setup into the game folder. **Save ESP Order** writes `Plugins.txt` and `loadorder.txt`.
 
-SML supports one game profile: **Skyrim Legendary Edition**.
+See the [User Guide](docs/user-guide.md) and [Troubleshooting](docs/troubleshooting.md) for details.
 
-Current capabilities include profiles, a Material You dashboard, Android system
-multi-select archive import, managed mod installation, mod enable/disable and
-priority, an editable ESP list with plugin enable/disable and ordering,
-automatic Skyrim port folder detection, port `Plugins.txt` and `loadorder.txt`
-synchronisation, deployment planning, physical deployment, diagnostics, and
-recovery foundations.
+## Building
 
-SML uses direct filesystem paths and Android all files access for shared storage
-workflows. Android 11 or newer is required.
+Requires JDK 17 and an Android SDK with build-tools 36.
 
-SML installs supported ZIP, 7z, and single volume, unencrypted RAR5 archives,
-including supported solid RAR5 archives. Password protected and multipart RAR
-archives, and some uncommon compression or encryption variants, are unsupported.
-See the [archive limits](docs/user-guide.md#current-limitations) before importing.
+```bash
+./gradlew :app:assembleRelease
+```
 
-## Compatibility environments
+Release signing reads `keystore.properties` from the project root:
 
-SML is intended for Android compatibility setups that expose usable game
-folders through shared storage. SML does not modify or depend on another
-application's protected private storage.
+```properties
+storeFile=/absolute/path/to/your.jks
+storePassword=...
+keyAlias=...
+keyPassword=...
+```
 
-Android may still block access to another application's protected `Android/data`
-directory even when all files access is enabled.
+Without that file the release build is unsigned. The Compose components come from the shared `skyrim-suite-ui` sources checked out beside this repo (`../skyrim-suite-ui`).
 
-## Get started
+## Layout
 
-1. Download `SkyrimModLoader.apk` from the [GitHub release](https://github.com/TweakerZ/Skyrim-Mod-Loader/releases).
-2. Install the APK on your Android device. To update, install over the existing
-   release app without uninstalling or clearing app data to retain profiles and
-   state managed by SML.
-3. Back up important game folders before deployment.
-4. Follow the [User Guide](docs/user-guide.md). Choose your Skyrim main folder;
-   SML checks it, finds the Data folder, and detects the port folder when present.
-5. Use [Troubleshooting](docs/troubleshooting.md) if setup, import, plugin, or deployment behavior looks wrong.
-
-## Project links
-
-- [User Guide](docs/user-guide.md)
-- [Troubleshooting](docs/troubleshooting.md)
-- [Changelog](releases/changelog.md)
-- [Credits](CREDITS.md)
-- [Contributing](CONTRIBUTING.md)
-- [LOOT Android](https://github.com/TweakerZ/loot-android) — companion load-order sorting app for SML
+- `app/src/main/java/com/shonkware/droidmodloader/engine/` – archive import, installers, plugins, deployment and storage.
+- `app/src/main/java/com/shonkware/droidmodloader/ui/` – Compose interface and workflow controllers.
+- `app/src/main/java/com/shonkware/droidmodloader/ui/workflow/` – dashboards, installer and deployment workflows.
+- `app/src/test/`, `app/src/androidTest/` – unit and instrumented tests.
 
 ## Credits
 
-SML builds on upstream and reference projects. See [CREDITS.md](CREDITS.md) for
-full credits, including Droid Mod Loader, Amethyst Mod Manager, the Nexus Mods
-FOMOD installer, Vortex, Mod Organizer 2, GameNative, Junrar, and the Skyrim
-static Android port by ttom795.
+SML is a fork of [Droid Mod Loader](https://github.com/CyberShonk/DroidModLoader) by CyberShonk. It builds on Amethyst Mod Manager, the Nexus Mods FOMOD installer, Vortex, Mod Organizer 2, GameNative and Junrar, and targets the [Skyrim static Android port](https://github.com/ttom795/Skyrim_Android) by ttom795. See [CREDITS.md](CREDITS.md) for full credits and licence details.
 
-## Contributing
+This is an unofficial fan tool. Skyrim and its assets belong to Bethesda Softworks.
 
-Bug reports, compatibility notes, documentation corrections, reproducible test
-cases, and focused code changes are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md).
-
-## License
-
-Skyrim Mod Loader is released under the [MIT License](LICENSE).
-
-## Disclaimer
-
-Skyrim Mod Loader is an independent project. Users remain responsible for the
-licenses and permissions of games, mods, and external tools they use. SML is not
-endorsed by or affiliated with Bethesda Softworks, Nexus Mods, CyberShonk, or
-the authors of the Skyrim static Android port.
+> [!NOTE]
+> Yes, AI was used in building this.
