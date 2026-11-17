@@ -3,7 +3,7 @@
 These steps describe the development version. Some features below are not in the
 current public release. For `v0.7.0-beta`, use the
 [released troubleshooting guide](https://github.com/CyberShonk/DroidModLoader/blob/v0.7.0-beta/docs/troubleshooting.md).
-See the [changelog](../releases/changelog.md) for version changes.
+See the [releases](https://github.com/TweakerZ/Skyrim-Mod-Loader/releases) for version changes.
 
 ## DML cannot use my game folder
 

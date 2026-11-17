@@ -1,40 +1,28 @@
-# Droid Mod Loader Release Notes Template
+# Release Notes Template
 
-Use this template for GitHub, Nexus Mods, Discord, or public APK upload notes.
+Use this for the GitHub release body and `releases/notes/<version>.md`.
 
-## Version
+## Title
 
-`v0.x.y-beta`
+`Skyrim Mod Loader <version>`
 
-## Date
+## Body
 
-`YYYY-MM-DD`
+<One sentence on what this release does.>
 
-## Summary
+**What's new**
 
-Short plain English summary of the release.
+- <user-visible change>
 
-Example:
+**Install**
 
-This release improves deployment safety, diagnostics, and general app behavior.
+Download `SkyrimModLoader-<version>.apk` and install it over the existing app. Android 11 (API 30) or newer.
 
-## Added
+**Notes**
 
--
+- Signed with a release key.
+- Fork of [Droid Mod Loader](https://github.com/CyberShonk/DroidModLoader) by CyberShonk. See `CREDITS.md` for third-party credits.
+- Yes, AI was used in building this.
 
-## Changed
-
--
-
-## Fixed
-
--
-
-## Known Issues
-
--
-
-## Upgrade Notes
-
-- Back up important game folders before testing deployment features.
-- Existing users should review their selected game target before deploying.
+Keep entries user-visible. Do not list internal refactors, file paths, or
+checksums; the GitHub asset digest covers integrity.

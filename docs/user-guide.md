@@ -6,7 +6,7 @@ and physical deployment for supported Bethesda games on Android.
 This guide describes the development version. Some features below are not in the
 current public release. For `v0.7.0-beta`, use the
 [released guide](https://github.com/CyberShonk/DroidModLoader/blob/v0.7.0-beta/docs/user-guide.md).
-See the [changelog](../releases/changelog.md) for version changes.
+See the [releases](https://github.com/TweakerZ/Skyrim-Mod-Loader/releases) for version changes.
 
 ## Before you begin
 
