@@ -3,31 +3,24 @@ package com.shonkware.droidmodloader.engine.companion
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.provider.Settings
 
 /**
- * Opens a companion app through the shared suite action. Older builds that do
- * not declare it yet are reached by their explicit activity, and builds from
- * before the drawer cleanup fall back to their launcher intent.
+ * Opens a companion app through the shared suite action or the tool's own
+ * action. Older builds without either are reached by their explicit activity,
+ * and builds from before the drawer cleanup fall back to their launcher intent.
  */
 class CompanionToolLauncher(
     private val context: Context
 ) {
     fun launch(tool: CompanionTool): Boolean {
         val packageManager = context.packageManager
-        val hubActivity = runCatching {
-            packageManager.queryIntentActivities(
-                Intent(CompanionToolCatalog.ACTION_OPEN)
-                    .addCategory(Intent.CATEGORY_DEFAULT)
-                    .setPackage(tool.packageName),
-                PackageManager.MATCH_DEFAULT_ONLY
-            ).firstOrNull { it.activityInfo?.packageName == tool.packageName }
-        }.getOrNull()
+        val actionActivities = CompanionToolLaunchIntents
+            .resolvedActivities(packageManager, tool)
 
         val candidates = buildList {
-            hubActivity?.let { resolved ->
+            actionActivities.forEach { resolved ->
                 add(
                     Intent().setComponent(
                         ComponentName(

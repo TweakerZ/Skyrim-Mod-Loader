@@ -11,6 +11,11 @@ data class CompanionTool(
     val description: String,
     val packageName: String,
     val knownActivity: String,
+    /**
+     * Tool-specific launch action declared by the app. Some tools predate the
+     * shared suite action and still expose their own.
+     */
+    val launchAction: String? = null,
     val releaseUrl: String,
     /**
      * First version that exposes [CompanionToolCatalog.ACTION_OPEN]. Leave null
@@ -53,34 +58,36 @@ object CompanionToolCatalog {
     val tools: List<CompanionTool> = listOf(
         CompanionTool(
             id = "anim",
-            displayName = "Skyrim Anim Tool",
+            displayName = "Anim Tool",
             description = "Generates animation behaviour for FNIS and Nemesis mods.",
             packageName = "com.skyrimandroid.animtool",
-            knownActivity = "com.skyrimandroid.animtool.ui.MainActivity",
+            knownActivity = "com.fnis.android.ui.MainActivity",
             releaseUrl = "https://github.com/TweakerZ/skyrim-anim-tool/releases"
         ),
         CompanionTool(
             id = "body",
-            displayName = "Skyrim Body Tool",
+            displayName = "Body Tool",
             description = "Builds BodySlide and Outfit Studio projects.",
             packageName = "com.skyrimandroid.bodytool",
-            knownActivity = "com.skyrimandroid.bodytool.MainActivity",
+            knownActivity = "com.bodyslide.android.MainActivity",
+            launchAction = "com.skyrimandroid.bodytool.LAUNCH",
             releaseUrl = "https://github.com/TweakerZ/skyrim-body-tool/releases"
         ),
         CompanionTool(
             id = "loot",
-            displayName = "LOOT Android",
+            displayName = "Loot",
             description = "Sorts plugin load order with LOOT.",
             packageName = "com.skyrimandroid.loot",
-            knownActivity = "com.skyrimandroid.loot.MainActivity",
+            knownActivity = "com.lootandroid.MainActivity",
             releaseUrl = "https://github.com/TweakerZ/loot-android/releases"
         ),
         CompanionTool(
             id = "resaver",
-            displayName = "Skyrim ReSaver",
+            displayName = "ReSaver",
             description = "Cleans stale script data from save files.",
             packageName = "com.skyrimandroid.resaver",
             knownActivity = "com.skyrimandroid.resaver.MainActivity",
+            launchAction = "com.skyrimandroid.resaver.action.OPEN",
             releaseUrl = "https://github.com/TweakerZ/resaver-android/releases"
         )
     )

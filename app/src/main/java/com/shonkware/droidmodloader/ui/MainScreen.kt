@@ -395,6 +395,12 @@ private fun MainDashboardScreen(
         onDismiss = { settingsVisible = false },
         title = "Advanced settings"
     ) {
+        CompanionToolsCard(
+            tools = state.companionTools,
+            onOpenTool = actions.onOpenCompanionTool,
+            onOpenToolPage = actions.onOpenCompanionToolPage
+        )
+
         DeploymentSettingsCard(
             selectedDataPathText = state.selectedDataPathText,
             selectedRootPathText = state.selectedRootPathText,
@@ -404,12 +410,6 @@ private fun MainDashboardScreen(
             onPickTargetFolder = actions.onPickTargetFolder,
             onSaveSettings = actions.onSaveSettings,
             onToggleSecondScreen = actions.onToggleSecondScreen
-        )
-
-        CompanionToolsCard(
-            tools = state.companionTools,
-            onOpenTool = actions.onOpenCompanionTool,
-            onOpenToolPage = actions.onOpenCompanionToolPage
         )
 
         SuiteDetailRow("Version", state.versionLabel)

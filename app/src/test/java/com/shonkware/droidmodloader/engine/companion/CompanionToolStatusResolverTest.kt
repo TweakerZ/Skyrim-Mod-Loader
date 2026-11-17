@@ -6,10 +6,10 @@ import org.junit.Test
 class CompanionToolStatusResolverTest {
     private val tool = CompanionTool(
         id = "loot",
-        displayName = "LOOT Android",
+        displayName = "Loot",
         description = "Sorts plugin load order with LOOT.",
         packageName = "com.skyrimandroid.loot",
-        knownActivity = "com.skyrimandroid.loot.MainActivity",
+        knownActivity = "com.lootandroid.MainActivity",
         releaseUrl = "https://github.com/TweakerZ/loot-android/releases"
     )
 

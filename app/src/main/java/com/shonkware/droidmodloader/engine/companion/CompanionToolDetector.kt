@@ -1,7 +1,6 @@
 package com.shonkware.droidmodloader.engine.companion
 
 import android.content.ComponentName
-import android.content.Intent
 import android.content.pm.PackageManager
 
 /**
@@ -21,14 +20,9 @@ class CompanionToolDetector(
             return CompanionToolStatusResolver.resolve(tool, null)
         }
 
-        val hubActionAvailable = runCatching {
-            packageManager.queryIntentActivities(
-                Intent(CompanionToolCatalog.ACTION_OPEN)
-                    .addCategory(Intent.CATEGORY_DEFAULT)
-                    .setPackage(tool.packageName),
-                PackageManager.MATCH_DEFAULT_ONLY
-            ).any { it.activityInfo?.packageName == tool.packageName }
-        }.getOrDefault(false)
+        val hubActionAvailable = CompanionToolLaunchIntents
+            .resolvedActivities(packageManager, tool)
+            .isNotEmpty()
 
         val explicitActivityAvailable = runCatching {
             packageManager.getActivityInfo(

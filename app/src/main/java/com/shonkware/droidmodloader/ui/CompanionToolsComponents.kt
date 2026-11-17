@@ -55,8 +55,7 @@ fun CompanionToolsCard(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         SuiteSectionHeader(
-            title = "Companion apps",
-            subtitle = "These tools open from here. They no longer have their own launcher icon."
+            title = "Companion apps"
         )
 
         if (tools.isEmpty()) {
