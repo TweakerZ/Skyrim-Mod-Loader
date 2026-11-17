@@ -339,6 +339,12 @@ internal class ModInspectionService(
                 it.isDeployable && it.deployScope == DeployScope.GAME_ROOT
             }
 
+            val overwritingModNames = groupEntries
+                .filter { it.status == ModFilePreviewStatus.OVERWRITTEN }
+                .mapNotNull { it.winningModName }
+                .distinct()
+                .sortedBy { it.lowercase() }
+
             val dominantStatus = when {
                 overwrittenCount > 0 -> ModFilePreviewStatus.OVERWRITTEN
                 winningCount > 0 -> ModFilePreviewStatus.WINNING
@@ -371,7 +377,8 @@ internal class ModInspectionService(
                 optionalCount = optionalCount,
                 ignoredCount = ignoredCount,
                 unknownCount = unknownCount,
-                dominantStatus = dominantStatus
+                dominantStatus = dominantStatus,
+                overwritingModNames = overwritingModNames
             )
         }.sortedWith(
             compareBy<ModFileFolderSummary> { it.isTopLevelFile }

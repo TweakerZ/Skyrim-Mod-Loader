@@ -18,5 +18,6 @@ data class ModFileFolderSummary(
     val optionalCount: Int,
     val ignoredCount: Int,
     val unknownCount: Int,
-    val dominantStatus: ModFilePreviewStatus
+    val dominantStatus: ModFilePreviewStatus,
+    val overwritingModNames: List<String> = emptyList()
 )

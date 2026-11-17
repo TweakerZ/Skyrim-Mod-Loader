@@ -32,6 +32,8 @@ class DashboardRefreshWorkflowTest {
         assertEquals(listOf("early.esm", "late.esp"), result.plugins.map { it.normalizedPath })
         assertEquals(setOf("low", "high"), result.modContentIndexes.keys)
         assertEquals(setOf("low", "high"), result.modFlags.keys)
+        assertEquals(setOf("low", "high"), result.modOverlaps.keys)
+        assertTrue(result.modOverlaps.values.all { it.isEmpty })
         assertEquals(
             setOf(ModFlag.NO_VALID_GAME_DATA),
             result.modFlags.getValue("high")

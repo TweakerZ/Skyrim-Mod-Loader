@@ -37,6 +37,7 @@ import com.shonkware.droidmodloader.engine.deploy.health.DeploymentRecoveryFact
 import com.shonkware.droidmodloader.engine.flags.ModFlag
 import com.shonkware.droidmodloader.engine.index.ModContentIndex
 import com.shonkware.droidmodloader.engine.index.ModFilePreview
+import com.shonkware.droidmodloader.engine.index.ModOverlapSummary
 import com.shonkware.droidmodloader.engine.install.PreparedArchiveInstall
 import com.shonkware.droidmodloader.engine.model.GameProfile
 import com.shonkware.droidmodloader.engine.model.Mod
@@ -98,6 +99,7 @@ data class DashboardUiState(
     val activeOperationText: String,
     val modContentIndexes: Map<String, ModContentIndex>,
     val modFlags: Map<String, Set<ModFlag>>,
+    val modOverlaps: Map<String, ModOverlapSummary> = emptyMap(),
     val pendingArchiveInstall: PreparedArchiveInstall?,
     val selectedInstallerOptionIds: Set<String>,
     val showInstallerDialog: Boolean,
@@ -327,6 +329,7 @@ private fun MainDashboardScreen(
                 mods = state.mods,
                 modContentIndexes = state.modContentIndexes,
                 modFlags = state.modFlags,
+                modOverlaps = state.modOverlaps,
                 onToggleMod = actions.onToggleMod,
                 onMoveModUp = actions.onMoveModUp,
                 onMoveModDown = actions.onMoveModDown,

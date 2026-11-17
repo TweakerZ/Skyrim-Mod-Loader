@@ -3,6 +3,8 @@ package com.shonkware.droidmodloader.ui.workflow
 import com.shonkware.droidmodloader.engine.ModEngine
 import com.shonkware.droidmodloader.engine.flags.ModFlag
 import com.shonkware.droidmodloader.engine.index.ModContentIndex
+import com.shonkware.droidmodloader.engine.index.ModOverlapAnalyzer
+import com.shonkware.droidmodloader.engine.index.ModOverlapSummary
 import com.shonkware.droidmodloader.engine.deploy.health.DeploymentHealth
 import com.shonkware.droidmodloader.engine.deploy.health.ScopedIntegrityObservation
 import com.shonkware.droidmodloader.engine.model.Mod
@@ -41,6 +43,7 @@ internal data class DashboardRefreshResult(
     val modContentIndexes: Map<String, ModContentIndex>,
     val modFlags: Map<String, Set<ModFlag>>,
     val summaryText: String,
+    val modOverlaps: Map<String, ModOverlapSummary> = emptyMap(),
     val deploymentHealth: DeploymentHealth? = null
 )
 
@@ -84,6 +87,7 @@ internal class DashboardRefreshWorkflow {
             plugins = plugins,
             modContentIndexes = contentIndexes,
             modFlags = modFlags,
+            modOverlaps = ModOverlapAnalyzer.analyze(mods, contentIndexes),
             summaryText = summary,
             deploymentHealth = engine.buildDeploymentHealth(profileId, selectedGameId, observation, contentIndexes)
         )

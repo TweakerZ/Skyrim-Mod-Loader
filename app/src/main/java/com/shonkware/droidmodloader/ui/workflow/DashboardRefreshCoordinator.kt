@@ -27,6 +27,7 @@ internal class DashboardRefreshCoordinator(
                 state.pendingEspHasChanges)
             state.visibleModContentIndexes = result.modContentIndexes
             state.visibleModFlags = result.modFlags
+            state.visibleModOverlaps = result.modOverlaps
             state.summaryText = result.summaryText
             appendLog("Dashboard refreshed.")
         }

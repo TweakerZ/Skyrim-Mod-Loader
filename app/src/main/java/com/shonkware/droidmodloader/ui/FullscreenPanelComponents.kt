@@ -27,6 +27,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.shonkware.droidmodloader.engine.flags.ModFlag
 import com.shonkware.droidmodloader.engine.index.ModContentIndex
+import com.shonkware.droidmodloader.engine.index.ModOverlapSummary
 import com.shonkware.droidmodloader.engine.model.Mod
 import com.shonkware.droidmodloader.engine.model.PluginEntry
 
@@ -35,6 +36,7 @@ fun ModsPanelDialog(
     mods: List<Mod>,
     modContentIndexes: Map<String, ModContentIndex>,
     modFlags: Map<String, Set<ModFlag>>,
+    modOverlaps: Map<String, ModOverlapSummary> = emptyMap(),
     onToggleMod: (String) -> Unit,
     onMoveModUp: (String) -> Unit,
     onMoveModDown: (String) -> Unit,
@@ -101,6 +103,7 @@ fun ModsPanelDialog(
                                     mod = mod,
                                     contentIndex = modContentIndexes[mod.id],
                                     flags = modFlags[mod.id].orEmpty(),
+                                    overlap = modOverlaps[mod.id] ?: ModOverlapSummary(),
                                     maxPosition = mods.size,
                                     onToggleMod = onToggleMod,
                                     onMoveModUp = onMoveModUp,

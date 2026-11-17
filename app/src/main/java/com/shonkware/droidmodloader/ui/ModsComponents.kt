@@ -1,6 +1,7 @@
 package com.shonkware.droidmodloader.ui
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Card
@@ -24,13 +26,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.shonkware.droidmodloader.engine.flags.ModFlag
 import com.shonkware.droidmodloader.engine.index.ModContentIndex
+import com.shonkware.droidmodloader.engine.index.ModOverlapSummary
+import com.shonkware.droidmodloader.engine.index.OverlappingMod
 import com.shonkware.droidmodloader.engine.model.Mod
 import com.shonkware.droidmodloader.ui.theme.DmlButtons
 import com.shonkware.droidmodloader.ui.theme.DmlColors
@@ -41,6 +49,7 @@ fun ModsCard(
     mods: List<Mod>,
     modContentIndexes: Map<String, ModContentIndex>,
     modFlags: Map<String, Set<ModFlag>>,
+    modOverlaps: Map<String, ModOverlapSummary>,
     onToggleMod: (String) -> Unit,
     onMoveModUp: (String) -> Unit,
     onMoveModDown: (String) -> Unit,
@@ -75,6 +84,7 @@ fun ModsCard(
                         mod = mod,
                         contentIndex = modContentIndexes[mod.id],
                         flags = modFlags[mod.id].orEmpty(),
+                        overlap = modOverlaps[mod.id] ?: ModOverlapSummary(),
                         maxPosition = orderedMods.size,
                         onToggleMod = onToggleMod,
                         onMoveModUp = onMoveModUp,
@@ -202,6 +212,101 @@ private fun ModFlagSummary(
 }
 
 @Composable
+private fun ModOverlapBadges(
+    overlap: ModOverlapSummary
+) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (overlap.overwrites.isNotEmpty()) {
+            OverlapBadge(
+                symbol = "↑",
+                count = overlap.overwritingFileCount,
+                container = MaterialTheme.colorScheme.secondaryContainer,
+                content = MaterialTheme.colorScheme.onSecondaryContainer,
+                description = "Overwrites ${describeMods(overlap.overwrites.size)}"
+            )
+        }
+
+        if (overlap.overwrittenBy.isNotEmpty()) {
+            OverlapBadge(
+                symbol = "↓",
+                count = overlap.overwrittenFileCount,
+                container = MaterialTheme.colorScheme.errorContainer,
+                content = MaterialTheme.colorScheme.onErrorContainer,
+                description = "Overwritten by ${describeMods(overlap.overwrittenBy.size)}"
+            )
+        }
+    }
+}
+
+@Composable
+private fun OverlapBadge(
+    symbol: String,
+    count: Int,
+    container: Color,
+    content: Color,
+    description: String
+) {
+    Row(
+        modifier = Modifier
+            .clip(CircleShape)
+            .background(container)
+            .padding(horizontal = 8.dp, vertical = 2.dp)
+            .semantics(mergeDescendants = true) { contentDescription = description },
+        horizontalArrangement = Arrangement.spacedBy(3.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = symbol,
+            style = MaterialTheme.typography.labelSmall,
+            fontWeight = FontWeight.Bold,
+            color = content
+        )
+        Text(
+            text = count.toString(),
+            style = MaterialTheme.typography.labelSmall,
+            color = content
+        )
+    }
+}
+
+@Composable
+private fun ModOverlapDetails(
+    overlap: ModOverlapSummary
+) {
+    if (overlap.isEmpty) return
+
+    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        if (overlap.overwrites.isNotEmpty()) {
+            Text(
+                text = "Overwrites ${describeMods(overlap.overwrites.size)}: " +
+                    formatOverlappingMods(overlap.overwrites),
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
+
+        if (overlap.overwrittenBy.isNotEmpty()) {
+            Text(
+                text = "Overwritten by ${describeMods(overlap.overwrittenBy.size)}: " +
+                    formatOverlappingMods(overlap.overwrittenBy),
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
+    }
+}
+
+private fun describeMods(count: Int): String =
+    if (count == 1) "1 mod" else "$count mods"
+
+private fun formatOverlappingMods(mods: List<OverlappingMod>): String =
+    mods.joinToString(", ") { mod ->
+        val files = if (mod.fileCount == 1) "1 file" else "${mod.fileCount} files"
+        "${mod.modName} ($files)"
+    }
+
+@Composable
 private fun ModPositionField(
     value: String,
     currentPosition: Int,
@@ -246,6 +351,7 @@ fun CompactModRow(
     mod: Mod,
     contentIndex: ModContentIndex?,
     flags: Set<ModFlag>,
+    overlap: ModOverlapSummary = ModOverlapSummary(),
     maxPosition: Int,
     onToggleMod: (String) -> Unit,
     onMoveModUp: (String) -> Unit,
@@ -311,6 +417,10 @@ fun CompactModRow(
                     }
 
                     ModFlagSummary(flags)
+
+                    if (!overlap.isEmpty) {
+                        ModOverlapBadges(overlap)
+                    }
                 }
 
                 TextButton(onClick = { expanded = !expanded }) {
@@ -382,6 +492,8 @@ fun CompactModRow(
                     if (contentIndex != null) {
                         ModContentSummary(contentIndex)
                     }
+
+                    ModOverlapDetails(overlap)
                 }
             }
         }

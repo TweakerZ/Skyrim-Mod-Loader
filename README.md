@@ -8,6 +8,7 @@ An Android mod manager for Skyrim Legendary Edition on a static Skyrim LE Androi
 
 - Imports `.zip`, `.7z` and RAR5 mod archives from the Android file picker, including FOMOD installers with option previews.
 - Manages installed mods: enable or disable, reorder by priority, set a load position from `001` through the last mod, and delete.
+- Shows file overlaps: expand a mod for the names of mods it overwrites or is overwritten by, and read the `↑`/`↓` badges in the collapsed row.
 - Editable ESP/ESM/ESL plugin list with enable/disable and Up/Down ordering. Locked official Skyrim masters stay pinned at the top.
 - Detects the port folder at `<game root>/port` and writes `Plugins.txt` and `loadorder.txt` into it.
 - Deploys the resolved mod setup to the game folder and reconciles plugins after installs, removals, toggles and deploys.

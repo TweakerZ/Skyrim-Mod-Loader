@@ -22,6 +22,7 @@ import com.shonkware.droidmodloader.engine.deploy.health.TargetReadiness
 import com.shonkware.droidmodloader.engine.flags.ModFlag
 import com.shonkware.droidmodloader.engine.index.ModContentIndex
 import com.shonkware.droidmodloader.engine.index.ModFilePreview
+import com.shonkware.droidmodloader.engine.index.ModOverlapSummary
 import com.shonkware.droidmodloader.engine.install.PreparedArchiveInstall
 import com.shonkware.droidmodloader.engine.model.GameProfile
 import com.shonkware.droidmodloader.engine.model.Mod
@@ -89,6 +90,7 @@ interface MainActivityUiState {
     var installerDialogFullscreen: Boolean
     var visibleModContentIndexes: Map<String, ModContentIndex>
     var visibleModFlags: Map<String, Set<ModFlag>>
+    var visibleModOverlaps: Map<String, ModOverlapSummary>
     var selectedModFilePreview: ModFilePreview?
     var showModFilePreviewDialog: Boolean
     var modFilePreviewFullscreen: Boolean
@@ -230,6 +232,7 @@ internal class MutableMainActivityUiState : MainActivityUiState {
     override var installerDialogFullscreen by mutableStateOf(false)
     override var visibleModContentIndexes by mutableStateOf<Map<String, ModContentIndex>>(emptyMap())
     override var visibleModFlags by mutableStateOf<Map<String, Set<ModFlag>>>(emptyMap())
+    override var visibleModOverlaps by mutableStateOf<Map<String, ModOverlapSummary>>(emptyMap())
     override var selectedModFilePreview by mutableStateOf<ModFilePreview?>(null)
     override var showModFilePreviewDialog by mutableStateOf(false)
     override var modFilePreviewFullscreen by mutableStateOf(false)
@@ -340,6 +343,7 @@ internal class MutableMainActivityUiState : MainActivityUiState {
             activeOperationText = activeOperationText,
             modContentIndexes = visibleModContentIndexes,
             modFlags = visibleModFlags,
+            modOverlaps = visibleModOverlaps,
             pendingArchiveInstall = pendingArchiveInstall,
             selectedInstallerOptionIds = pendingInstallerSelectedOptionIds,
             installerChoices = installerChoices,

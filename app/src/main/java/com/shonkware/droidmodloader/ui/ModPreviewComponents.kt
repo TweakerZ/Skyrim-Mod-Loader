@@ -141,6 +141,13 @@ fun FolderSummaryRow(
                 },
                 style = MaterialTheme.typography.bodySmall
             )
+
+            if (summary.overwritingModNames.isNotEmpty()) {
+                Text(
+                    text = "Overwritten by: ${summary.overwritingModNames.joinToString(", ")}",
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
         }
     }
 }
