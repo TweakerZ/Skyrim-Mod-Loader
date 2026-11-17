@@ -12,7 +12,7 @@ An Android mod manager for Skyrim Legendary Edition on a static Skyrim LE Androi
 - Editable ESP/ESM/ESL plugin list with enable/disable and Up/Down ordering. Locked official Skyrim masters stay pinned at the top.
 - Detects the port folder at `<game root>/port` and writes `Plugins.txt` and `loadorder.txt` into it.
 - Deploys the resolved mod setup to the game folder and reconciles plugins after installs, removals, toggles and deploys.
-- Companion app: [LOOT Android](https://github.com/TweakerZ/loot-android) sorts plugin load order using the same `Plugins.txt` and `loadorder.txt`.
+- Companion apps: [Anim Tool](https://github.com/TweakerZ/skyrim-anim-tool), [Body Tool](https://github.com/TweakerZ/skyrim-body-tool), [LOOT Android](https://github.com/TweakerZ/loot-android) and [ReSaver](https://github.com/TweakerZ/resaver-android) install separately and open from **Advanced settings > Companion apps**.
 
 ![Mods](docs/screenshot-mods.png)
 
@@ -29,7 +29,7 @@ An Android mod manager for Skyrim Legendary Edition on a static Skyrim LE Androi
 3. Import mod archives, then enable and order your mods and plugins.
 4. **Deploy Mods** copies the mod setup into the game folder. **Save ESP Order** writes `Plugins.txt` and `loadorder.txt`.
 
-Companion tools from the Skyrim suite open from **Advanced settings > Companion apps**. The Anim Tool, Body Tool, LOOT and ReSaver no longer add their own launcher icons.
+Companion tools from the Skyrim suite open from **Advanced settings > Companion apps**: [Anim Tool](https://github.com/TweakerZ/skyrim-anim-tool), [Body Tool](https://github.com/TweakerZ/skyrim-body-tool), [LOOT Android](https://github.com/TweakerZ/loot-android) and [ReSaver](https://github.com/TweakerZ/resaver-android). They no longer add their own launcher icons, so this is the only place they appear.
 
 ## Building
 
