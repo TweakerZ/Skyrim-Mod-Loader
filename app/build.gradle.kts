@@ -149,14 +149,17 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.create("release") {
-                val props = Properties().apply {
-                    rootProject.file("keystore.properties").inputStream().use { load(it) }
+            val keystoreProperties = rootProject.file("keystore.properties")
+            if (keystoreProperties.isFile) {
+                signingConfig = signingConfigs.create("release") {
+                    val props = Properties().apply {
+                        keystoreProperties.inputStream().use { load(it) }
+                    }
+                    storeFile = rootProject.file(props.getProperty("storeFile"))
+                    storePassword = props.getProperty("storePassword")
+                    keyAlias = props.getProperty("keyAlias")
+                    keyPassword = props.getProperty("keyPassword")
                 }
-                storeFile = rootProject.file(props.getProperty("storeFile"))
-                storePassword = props.getProperty("storePassword")
-                keyAlias = props.getProperty("keyAlias")
-                keyPassword = props.getProperty("keyPassword")
             }
         }
     }
