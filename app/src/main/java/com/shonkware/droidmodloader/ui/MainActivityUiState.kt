@@ -8,6 +8,7 @@ import com.shonkware.droidmodloader.attention.AppAttentionIds
 import com.shonkware.droidmodloader.attention.AppAttentionKind
 import com.shonkware.droidmodloader.attention.AppAttentionProjectionInput
 import com.shonkware.droidmodloader.attention.AppAttentionProjector
+import com.shonkware.droidmodloader.engine.companion.CompanionToolState
 import com.shonkware.droidmodloader.engine.deploy.GameTargetType
 import com.shonkware.droidmodloader.engine.deploy.health.DeploymentHealth
 import com.shonkware.droidmodloader.engine.deploy.health.DeploymentHealthFacts
@@ -56,6 +57,7 @@ interface MainActivityUiState {
     var newProfileRootPathText: String
     var developerTapCount: Int
     var developerModeEnabled: Boolean
+    var companionTools: List<CompanionToolState>
     var lastOperationStatus: String
     var operationHistoryPresentation: OperationHistoryPresentation
     var logText: String
@@ -196,6 +198,7 @@ internal class MutableMainActivityUiState : MainActivityUiState {
     override var newProfileRootPathText by mutableStateOf("")
     override var developerTapCount = 0
     override var developerModeEnabled by mutableStateOf(false)
+    override var companionTools by mutableStateOf<List<CompanionToolState>>(emptyList())
     override var lastOperationStatus by mutableStateOf("Ready.")
     override var operationHistoryPresentation by mutableStateOf(OperationHistoryPresentation())
     override var logText by mutableStateOf("")
@@ -278,6 +281,7 @@ internal class MutableMainActivityUiState : MainActivityUiState {
         return DashboardUiState(
             appName = "Skyrim Mod Loader",
             versionLabel = BuildConfig.VERSION_NAME,
+            companionTools = companionTools,
             developerModeEnabled = developerModeEnabled,
             lastOperationStatus = lastOperationStatus,
             toast = toast,

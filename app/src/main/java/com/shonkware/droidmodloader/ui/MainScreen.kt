@@ -31,6 +31,7 @@ import androidx.compose.ui.res.painterResource
 import com.shonkware.droidmodloader.attention.AppAttention
 import com.shonkware.droidmodloader.attention.AppAttentionAction
 import com.shonkware.droidmodloader.attention.AppAttentionId
+import com.shonkware.droidmodloader.engine.companion.CompanionToolState
 import com.shonkware.droidmodloader.engine.deploy.health.DeploymentHealth
 import com.shonkware.droidmodloader.engine.deploy.health.DeploymentRecoveryFact
 import com.shonkware.droidmodloader.engine.flags.ModFlag
@@ -61,6 +62,7 @@ import com.skyrimsuite.ui.SuiteSettingsSheet
 data class DashboardUiState(
     val appName: String,
     val versionLabel: String,
+    val companionTools: List<CompanionToolState> = emptyList(),
     val developerModeEnabled: Boolean,
     val lastOperationStatus: String,
     val toast: UiToast? = null,
@@ -136,6 +138,8 @@ data class DashboardUiState(
 
 data class DashboardActions(
     val onVersionTap: () -> Unit,
+    val onOpenCompanionTool: (String) -> Unit = {},
+    val onOpenCompanionToolPage: (String) -> Unit = {},
     val onInstallMod: () -> Unit,
     val onChooseArchiveFolder: () -> Unit,
     val onDismissArchiveFolderSetup: () -> Unit,
@@ -397,6 +401,12 @@ private fun MainDashboardScreen(
             onPickTargetFolder = actions.onPickTargetFolder,
             onSaveSettings = actions.onSaveSettings,
             onToggleSecondScreen = actions.onToggleSecondScreen
+        )
+
+        CompanionToolsCard(
+            tools = state.companionTools,
+            onOpenTool = actions.onOpenCompanionTool,
+            onOpenToolPage = actions.onOpenCompanionToolPage
         )
 
         SuiteDetailRow("Version", state.versionLabel)

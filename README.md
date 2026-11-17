@@ -28,6 +28,8 @@ An Android mod manager for Skyrim Legendary Edition on a static Skyrim LE Androi
 3. Import mod archives, then enable and order your mods and plugins.
 4. **Deploy Mods** copies the mod setup into the game folder. **Save ESP Order** writes `Plugins.txt` and `loadorder.txt`.
 
+Companion tools from the Skyrim suite open from **Advanced settings > Companion apps**. The Anim Tool, Body Tool, LOOT and ReSaver no longer add their own launcher icons.
+
 ## Building
 
 Requires JDK 17 and an Android SDK with build-tools 36.

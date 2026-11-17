@@ -37,6 +37,8 @@ internal class DashboardActionBindings(
     private val onMovePendingPluginUp: (String) -> Unit = {},
     private val onMovePendingPluginDown: (String) -> Unit = {},
     private val onSaveEspOrder: () -> Unit = {},
+    private val openCompanionTool: (String) -> Unit = {},
+    private val openCompanionToolPage: (String) -> Unit = {},
 
 ) {
     // Do not store Activity callbacks on this binder: its background action
@@ -47,6 +49,8 @@ internal class DashboardActionBindings(
         pickModArchives: () -> Unit = {}
     ): DashboardActions {
         return DashboardActions(
+            onOpenCompanionTool = openCompanionTool,
+            onOpenCompanionToolPage = openCompanionToolPage,
             onVersionTap = {
                 state.developerTapCount++
                 if (!state.developerModeEnabled && state.developerTapCount >= 5) {

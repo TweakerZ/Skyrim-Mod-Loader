@@ -19,6 +19,10 @@ import com.shonkware.droidmodloader.engine.install.InstallerType
 import com.shonkware.droidmodloader.engine.install.InstallCancellationController
 import com.shonkware.droidmodloader.engine.install.InstallCancelledException
 import com.shonkware.droidmodloader.engine.install.requireValidModName
+import com.shonkware.droidmodloader.engine.companion.CompanionToolCatalog
+import com.shonkware.droidmodloader.engine.companion.CompanionToolDetector
+import com.shonkware.droidmodloader.engine.companion.CompanionToolLauncher
+import com.shonkware.droidmodloader.engine.companion.CompanionToolStatus
 import com.shonkware.droidmodloader.ui.workflow.editManualInstallerChoices
 import android.os.Bundle
 import android.util.Log
@@ -148,9 +152,46 @@ internal class SessionViewModel @JvmOverloads constructor(
     private val packageManager = application.packageManager
     private val packageName = application.packageName
     private val mainHandler = Handler(Looper.getMainLooper())
+    private val companionToolDetector = CompanionToolDetector(packageManager)
+    private val companionToolLauncher = CompanionToolLauncher(applicationContext)
 
     private fun notifyToast(message: String) {
         runOnUiThread { showToast(message) }
+    }
+
+    private fun refreshCompanionTools() {
+        val detected = companionToolDetector.detectAll()
+        if (companionTools != detected) {
+            companionTools = detected
+        }
+    }
+
+    fun openCompanionTool(id: String) {
+        val tool = CompanionToolCatalog.byId(id) ?: return
+        val state = companionTools.firstOrNull { it.tool.id == id }
+
+        when (state?.status) {
+            CompanionToolStatus.NOT_INSTALLED, null -> openCompanionToolPage(id)
+
+            CompanionToolStatus.DISABLED -> {
+                if (!companionToolLauncher.openAppDetails(tool)) {
+                    notifyToast("Could not open Android app settings.")
+                }
+            }
+
+            else -> {
+                if (!companionToolLauncher.launch(tool)) {
+                    notifyToast("Could not open ${tool.displayName}. Update it and try again.")
+                }
+            }
+        }
+    }
+
+    fun openCompanionToolPage(id: String) {
+        val tool = CompanionToolCatalog.byId(id) ?: return
+        if (!companionToolLauncher.openReleasePage(tool)) {
+            notifyToast("Could not open the releases page.")
+        }
     }
 
     var settingsRequested by mutableStateOf(false)
@@ -1711,6 +1752,8 @@ internal class SessionViewModel @JvmOverloads constructor(
     ): DashboardActions =
         DashboardActionBindings(
             state = this,
+            openCompanionTool = ::openCompanionTool,
+            openCompanionToolPage = ::openCompanionToolPage,
             archiveBrowserWorkflow = archiveBrowserWorkflow,
             directFolderSelectionCoordinator = directFolderSelectionCoordinator,
             deploymentActionWorkflowController = deploymentActionWorkflowController,
@@ -1878,6 +1921,7 @@ internal class SessionViewModel @JvmOverloads constructor(
 
     fun initialize(savedInstanceState: Bundle?) {
         refreshAccessState()
+        refreshCompanionTools()
         appStartupCoordinator.initialize {
             restoreAttentionSessionState(savedInstanceState)
         }
@@ -1898,6 +1942,7 @@ internal class SessionViewModel @JvmOverloads constructor(
 
     fun onResume() {
         refreshAccessState()
+        refreshCompanionTools()
         archiveBrowserWorkflow.refreshIfOpen()
     }
 
