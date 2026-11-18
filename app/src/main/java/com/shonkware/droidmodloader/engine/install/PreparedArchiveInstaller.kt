@@ -140,7 +140,8 @@ class PreparedArchiveInstaller internal constructor(
         cancellationSignal:
         InstallCancellationSignal =
             InstallCancellationSignal.NONE,
-        manualLayoutProposal: ManualLayoutProposal? = null
+        manualLayoutProposal: ManualLayoutProposal? = null,
+        warnings: MutableList<String> = mutableListOf()
     ): File {
         cancellationSignal
             .throwIfCancellationRequested()
@@ -219,9 +220,48 @@ class PreparedArchiveInstaller internal constructor(
                 emptyList()
             }
 
+            var stagedAnyContent =
+                previousInventory?.entries?.isNotEmpty() == true
+
             if (installFiles.isEmpty() && manualPreview == null) {
-                throw IllegalStateException(
-                    "No installer options selected."
+                val fallbackMessage =
+                    "No installer files matched the selection. Installed all extracted files instead."
+                debugLog(fallbackMessage)
+                warnings += fallbackMessage
+                if (
+                    copyRawFallback(
+                        installRoot = installRoot,
+                        stagedDir = stagedDir,
+                        cancellationSignal = cancellationSignal
+                    )
+                ) {
+                    stagedAnyContent = true
+                }
+            } else {
+                installFiles.forEach { file ->
+                    cancellationSignal
+                        .throwIfCancellationRequested()
+
+                    if (
+                        copySingleFile(
+                            installRoot = installRoot,
+                            source = file.source,
+                            destination = file.destination,
+                            finalDir = stagedDir,
+                            cancellationSignal =
+                                cancellationSignal,
+                            isDirectory = file.isDirectory,
+                            warnings = warnings
+                        )
+                    ) {
+                        stagedAnyContent = true
+                    }
+                }
+            }
+
+            if (manualPreview == null && !stagedAnyContent) {
+                throw IOException(
+                    "The archive contains no files to install."
                 )
             }
 
@@ -247,21 +287,6 @@ class PreparedArchiveInstaller internal constructor(
                         safeResolveInstallerPath(stagedDir, file.destinationPath), cancellationSignal)
                 }
                 inventory.requireCurrent(cancellationSignal)
-            } else {
-                installFiles.forEach { file ->
-                    cancellationSignal
-                        .throwIfCancellationRequested()
-
-                    copySingleFile(
-                        installRoot = installRoot,
-                        source = file.source,
-                        destination = file.destination,
-                        finalDir = stagedDir,
-                        cancellationSignal =
-                            cancellationSignal,
-                        isDirectory = file.isDirectory
-                    )
-                }
             }
 
             cancellationSignal
@@ -475,19 +500,26 @@ class PreparedArchiveInstaller internal constructor(
         finalDir: File,
         cancellationSignal:
         InstallCancellationSignal,
+        warnings: MutableList<String>,
         isDirectory: Boolean = false
-    ) {
+    ): Boolean {
         val srcFile = resolveSourceFile(installRoot, source)
 
         if (!srcFile.exists()) {
             // A referenced source path does not exist in the extracted archive.
             // Skip it with a warning rather than failing the whole install -
             // the parser already warned about missing paths at parse time.
+            val message =
+                "The installer references a file that is not in the archive: " +
+                        source
             debugLog(
                 "Installer source does not exist, skipping: " +
                         source + " (" + srcFile.absolutePath + ")"
             )
-            return
+            if (warnings.none { it == message }) {
+                warnings += message
+            }
+            return false
         }
 
         if (isDirectory || srcFile.isDirectory) {
@@ -507,6 +539,45 @@ class PreparedArchiveInstaller internal constructor(
                     cancellationSignal
             )
         }
+        return true
+    }
+
+    /**
+     * Copies the extracted archive when no installer option resolves to a
+     * file. The fomod folder is setup data, so it is never installed.
+     */
+    private fun copyRawFallback(
+        installRoot: File,
+        stagedDir: File,
+        cancellationSignal: InstallCancellationSignal
+    ): Boolean {
+        val children = installRoot.listFiles()
+            ?: throw IOException(
+                "Could not read prepared install root: " +
+                        installRoot.absolutePath
+            )
+
+        var copied = false
+
+        children.forEach { child ->
+            cancellationSignal.throwIfCancellationRequested()
+
+            if (
+                child.isDirectory &&
+                child.name.equals("fomod", ignoreCase = true)
+            ) {
+                return@forEach
+            }
+
+            fileCopier(
+                child,
+                safeResolveInstallerPath(stagedDir, child.name),
+                cancellationSignal
+            )
+            copied = true
+        }
+
+        return copied
     }
 
     /**

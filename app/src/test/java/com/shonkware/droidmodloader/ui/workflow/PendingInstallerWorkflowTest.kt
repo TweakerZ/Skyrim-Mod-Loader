@@ -554,7 +554,8 @@ class PendingInstallerWorkflowTest {
             priority: Int,
             sourceType: String,
             cancellationSignal:
-            InstallCancellationSignal
+            InstallCancellationSignal,
+            installWarnings: MutableList<String>
         ): Mod {
             finalizeCalled = true
             finalizedPrepared = prepared

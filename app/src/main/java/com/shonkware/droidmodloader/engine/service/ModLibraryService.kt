@@ -495,7 +495,8 @@ internal class ModLibraryService(
         sourceType: String = "imported_archive",
         cancellationSignal:
         InstallCancellationSignal =
-            InstallCancellationSignal.NONE
+            InstallCancellationSignal.NONE,
+        installWarnings: MutableList<String> = mutableListOf()
     ): Mod {
         val finalDir =
             preparedArchiveInstaller.finalizeInstall(
@@ -503,7 +504,8 @@ internal class ModLibraryService(
                 selection =
                     InstallerSelection(selectedOptionIds),
                 cancellationSignal =
-                    cancellationSignal
+                    cancellationSignal,
+                warnings = installWarnings
             )
 
         writeInstalledModRecord(

@@ -36,7 +36,8 @@ internal interface PendingInstallerEngine {
         priority: Int,
         sourceType: String,
         cancellationSignal:
-        InstallCancellationSignal
+        InstallCancellationSignal,
+        installWarnings: MutableList<String> = mutableListOf()
     ): Mod
 
     fun saveCurrentMods(mods: List<Mod>)
@@ -60,7 +61,8 @@ internal class PendingInstallerEngineAdapter(
         priority: Int,
         sourceType: String,
         cancellationSignal:
-        InstallCancellationSignal
+        InstallCancellationSignal,
+        installWarnings: MutableList<String>
     ): Mod {
         return engine.finalizePreparedArchiveInstall(
             prepared = prepared,
@@ -69,7 +71,8 @@ internal class PendingInstallerEngineAdapter(
             priority = priority,
             sourceType = sourceType,
             cancellationSignal =
-                cancellationSignal
+                cancellationSignal,
+            installWarnings = installWarnings
         )
     }
 
@@ -210,6 +213,8 @@ internal class PendingInstallerWorkflow(
                     existingMods
                 )
 
+            val installWarnings = mutableListOf<String>()
+
             val installedMod =
                 engine.finalizePreparedArchiveInstall(
                     prepared = session.prepared,
@@ -219,7 +224,8 @@ internal class PendingInstallerWorkflow(
                     sourceType =
                         "imported_archive",
                     cancellationSignal =
-                        cancellationController.signal
+                        cancellationController.signal,
+                    installWarnings = installWarnings
                 )
 
             val previous = existingMods.singleOrNull { it.id == installedMod.id }
@@ -248,10 +254,19 @@ internal class PendingInstallerWorkflow(
                 installedMod
             )
 
+            installWarnings.forEach { warning ->
+                appendLog("INSTALL WARNING: $warning")
+            }
+
             appendLog("RESULT: PASS")
 
-            operation.succeed("Archive imported successfully.")
-            showToast("Installed ${installedMod.name}.")
+            if (installWarnings.isEmpty()) {
+                operation.succeed("Archive imported successfully.")
+                showToast("Installed ${installedMod.name}.")
+            } else {
+                operation.succeed("Archive imported with warnings.")
+                showToast("Installed ${installedMod.name} with warnings.")
+            }
             refreshDashboard()
         } catch (
             exception: InstallCancelledException

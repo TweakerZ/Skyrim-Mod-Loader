@@ -354,17 +354,22 @@ class ManualLayoutInstallTest {
         assertFalse(mods.exists())
     }
 
-    @Test fun `malformed FOMOD is still a preparation failure not manual fallback`() {
+    @Test fun `malformed FOMOD falls back to a simple install`() {
         val source = archive()
         ZipOutputStream(source.outputStream()).use { zip ->
             zip.putNextEntry(ZipEntry("fomod/ModuleConfig.xml"))
             zip.write("<config".toByteArray())
             zip.closeEntry()
         }
-        assertThrows(IOException::class.java) { installer().prepare(source) }
+        val prepared = installer().prepare(source)
+        assertEquals(InstallerType.SIMPLE, prepared.plan.installerType)
+        assertTrue(
+            prepared.plan.warnings.any {
+                it.contains("could not be read")
+            }
+        )
         assertEquals(1, reads)
         assertFalse(mods.exists())
-        assertTrue(File(temporary.root, "temp/installer_sessions").listFiles().orEmpty().isEmpty())
     }
 
     @Test fun `managed parent aliases produce canonical owned sessions and support add update`() {

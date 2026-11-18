@@ -86,6 +86,113 @@ class PreparedArchiveInstallerTest {
     }
 
     @Test
+    fun `empty fomod selection installs extracted files except fomod`() {
+        withFixture("empty-fomod-selection") { fixture ->
+            val sessionRoot = File(
+                fixture.root,
+                "prepared-session"
+            ).apply {
+                check(mkdirs())
+            }
+            val installRoot = File(
+                sessionRoot,
+                "content"
+            ).apply {
+                check(mkdirs())
+            }
+
+            File(installRoot, "fomod").mkdirs()
+            File(installRoot, "fomod/ModuleConfig.xml")
+                .writeText("<config/>")
+            File(installRoot, "meshes").mkdirs()
+            File(installRoot, "meshes/body.nif")
+                .writeText("mesh")
+
+            val prepared = preparedFomodInstall(
+                sessionRoot = sessionRoot,
+                installRoot = installRoot
+            )
+            val warnings = mutableListOf<String>()
+
+            val result = installer(fixture).finalizeInstall(
+                prepared = prepared,
+                selection = InstallerSelection(
+                    selectedOptionIds = emptySet()
+                ),
+                warnings = warnings
+            )
+
+            assertEquals(
+                "mesh",
+                File(result, "meshes/body.nif").readText()
+            )
+            assertFalse(File(result, "fomod").exists())
+            assertTrue(
+                warnings.any {
+                    it.contains("Installed all extracted files instead")
+                }
+            )
+        }
+    }
+
+    @Test
+    fun `missing installer sources are reported as install warnings`() {
+        withFixture("missing-source-warning") { fixture ->
+            val sessionRoot = File(
+                fixture.root,
+                "prepared-session"
+            ).apply {
+                check(mkdirs())
+            }
+            val installRoot = File(
+                sessionRoot,
+                "content"
+            ).apply {
+                check(mkdirs())
+            }
+            File(installRoot, "marker.txt").writeText("new")
+
+            val prepared = preparedInstall(
+                sessionRoot = sessionRoot,
+                installRoot = installRoot,
+                options = listOf(
+                    InstallerOption(
+                        id = "missing",
+                        name = "Missing",
+                        sourcePath = "missing",
+                        required = true
+                    ),
+                    InstallerOption(
+                        id = "present",
+                        name = "Present",
+                        sourcePath = "marker.txt",
+                        required = true
+                    )
+                )
+            )
+            val warnings = mutableListOf<String>()
+
+            val result = installer(fixture).finalizeInstall(
+                prepared = prepared,
+                selection = InstallerSelection(
+                    selectedOptionIds = emptySet()
+                ),
+                warnings = warnings
+            )
+
+            assertEquals(
+                "new",
+                File(result, "marker.txt").readText()
+            )
+            assertTrue(
+                warnings.any {
+                    it.contains("references a file that is not in the archive")
+                }
+            )
+        }
+    }
+
+    @Test
     fun `promotion failure restores the installed mod`() {
         withFixture("promotion-failure") { fixture ->
             val finalDir = createInstalledMod(
@@ -388,6 +495,43 @@ class PreparedArchiveInstallerTest {
                         name = "Main",
                         type = InstallerGroupType.SELECT_ANY,
                         options = options
+                    )
+                )
+            )
+        )
+    }
+
+    private fun preparedFomodInstall(
+        sessionRoot: File,
+        installRoot: File
+    ): PreparedArchiveInstall {
+        return PreparedArchiveInstall(
+            archivePath = File(
+                sessionRoot.parentFile,
+                "ExampleMod.zip"
+            ).absolutePath,
+            archiveName = "ExampleMod.zip",
+            modName = "ExampleMod",
+            sessionRootPath = sessionRoot.absolutePath,
+            extractedRootPath = installRoot.absolutePath,
+            installRootPath = installRoot.absolutePath,
+            plan = InstallerPlan(
+                installerType = InstallerType.FOMOD,
+                displayName = "ExampleMod",
+                rootPath = installRoot.absolutePath,
+                groups = listOf(
+                    InstallerGroup(
+                        id = "main",
+                        name = "Main",
+                        type = InstallerGroupType.SELECT_ANY,
+                        options = listOf(
+                            InstallerOption(
+                                id = "flags-only",
+                                name = "Flags only",
+                                sourcePath = "",
+                                flags = mapOf("Mode" to "On")
+                            )
+                        )
                     )
                 )
             )

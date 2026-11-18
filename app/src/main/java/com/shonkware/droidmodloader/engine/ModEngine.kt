@@ -288,7 +288,8 @@ class ModEngine(
         sourceType: String = "imported_archive",
         cancellationSignal:
         InstallCancellationSignal =
-            InstallCancellationSignal.NONE
+            InstallCancellationSignal.NONE,
+        installWarnings: MutableList<String> = mutableListOf()
     ): Mod {
         return modLibraryService
             .finalizePreparedArchiveInstall(
@@ -299,7 +300,8 @@ class ModEngine(
                 enabled = enabled,
                 sourceType = sourceType,
                 cancellationSignal =
-                    cancellationSignal
+                    cancellationSignal,
+                installWarnings = installWarnings
             )
     }
     fun findExistingModName(name: String): String? = modLibraryService.findExistingModName(name)

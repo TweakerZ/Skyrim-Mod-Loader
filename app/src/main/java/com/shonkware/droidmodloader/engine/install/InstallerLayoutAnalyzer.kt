@@ -30,7 +30,11 @@ class InstallerLayoutAnalyzer {
     fun analyze(contentRoot: File, modName: String): InstallerPlan {
         val fomodConfig = findFomodConfig(contentRoot)
         if (fomodConfig != null) {
-            return FomodInstallerParser().parse(contentRoot, fomodConfig, modName)
+            return try {
+                FomodInstallerParser().parse(contentRoot, fomodConfig, modName)
+            } catch (exception: Exception) {
+                createUnreadableFomodPlan(contentRoot, modName, exception)
+            }
         }
 
         // Scripted FOMOD (fomod/ with script.cs/script.dll but no ModuleConfig).
@@ -47,32 +51,47 @@ class InstallerLayoutAnalyzer {
             )
         }
 
+        val fomodWarnings = if (findFomodFolder(contentRoot) != null) {
+            listOf(
+                "A fomod folder was found but it has no usable ModuleConfig.xml. " +
+                    "Installing the extracted files without FOMOD options; the fomod folder is not deployed."
+            )
+        } else {
+            emptyList()
+        }
+
         val bainPlan = createBainPlanIfApplicable(contentRoot, modName)
         if (bainPlan != null) {
-            return bainPlan
+            return appendWarnings(bainPlan, fomodWarnings)
         }
 
         if (hasRecognizedGameContent(contentRoot)) {
-            return createSimplePlan(contentRoot, modName)
+            return appendWarnings(createSimplePlan(contentRoot, modName), fomodWarnings)
         }
 
         val candidates = findDataRootCandidates(contentRoot)
 
         if (candidates.isNotEmpty()) {
-            return createManualDataFolderPlan(
-                contentRoot = contentRoot,
-                modName = modName,
-                candidates = candidates
+            return appendWarnings(
+                createManualDataFolderPlan(
+                    contentRoot = contentRoot,
+                    modName = modName,
+                    candidates = candidates
+                ),
+                fomodWarnings
             )
         }
 
         // Extraction safety is already enforced. Unknown structure requires an
         // explicit file selection and acknowledgement, not an extraction failure.
-        return InstallerPlan(
-            installerType = InstallerType.MANUAL_DATA_FOLDER,
-            displayName = modName,
-            rootPath = contentRoot.absolutePath,
-            groups = emptyList()
+        return appendWarnings(
+            InstallerPlan(
+                installerType = InstallerType.MANUAL_DATA_FOLDER,
+                displayName = modName,
+                rootPath = contentRoot.absolutePath,
+                groups = emptyList()
+            ),
+            fomodWarnings
         )
     }
 
@@ -172,6 +191,58 @@ class InstallerLayoutAnalyzer {
         }
 
         return null
+    }
+
+    /**
+     * Finds a fomod folder even when its config is missing or sits below the
+     * resolved content root. Only used to explain why no options were offered.
+     */
+    private fun findFomodFolder(root: File): File? {
+        return root.walkTopDown()
+            .maxDepth(6)
+            .firstOrNull { candidate ->
+                candidate.isDirectory &&
+                    candidate.name.equals("fomod", ignoreCase = true)
+            }
+    }
+
+    private fun appendWarnings(
+        plan: InstallerPlan,
+        warnings: List<String>
+    ): InstallerPlan {
+        if (warnings.isEmpty()) return plan
+        return plan.copy(warnings = (plan.warnings + warnings).distinct())
+    }
+
+    /**
+     * A ModuleConfig.xml that cannot be parsed still leaves usable archive
+     * content. Install everything as a simple plan rather than failing the
+     * import, and tell the user that the option tree was not applied.
+     */
+    private fun createUnreadableFomodPlan(
+        contentRoot: File,
+        modName: String,
+        exception: Exception
+    ): InstallerPlan {
+        val detail = exception.message
+            ?.lineSequence()
+            ?.firstOrNull { it.isNotBlank() }
+            ?.trim()
+            ?.take(240)
+            .orEmpty()
+        val reason = if (detail.isBlank()) {
+            "This FOMOD installer could not be read."
+        } else {
+            "This FOMOD installer could not be read: $detail"
+        }
+
+        return appendWarnings(
+            createSimplePlan(contentRoot, modName),
+            listOf(
+                "$reason Installing all extracted files without FOMOD options; " +
+                    "the fomod folder is not deployed."
+            )
+        )
     }
 
     /**

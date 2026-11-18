@@ -322,7 +322,8 @@ class SessionRecreationTest {
             selectedOptionIds: Set<String>,
             priority: Int,
             sourceType: String,
-            cancellationSignal: InstallCancellationSignal
+            cancellationSignal: InstallCancellationSignal,
+            installWarnings: MutableList<String>
         ): Mod {
             finalizeCount.incrementAndGet()
             selectedIds = selectedOptionIds

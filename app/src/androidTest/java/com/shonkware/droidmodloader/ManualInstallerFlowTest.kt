@@ -281,10 +281,12 @@ class ManualInstallerFlowTest {
         override fun getCurrentMods(): List<Mod> = state
         override fun findExistingModName(name: String): String? = installer.findExistingModName(name)
         override fun finalizePreparedArchiveInstall(prepared: PreparedArchiveInstall, selectedOptionIds: Set<String>,
-            priority: Int, sourceType: String, cancellationSignal: InstallCancellationSignal): Mod {
+            priority: Int, sourceType: String, cancellationSignal: InstallCancellationSignal,
+            installWarnings: MutableList<String>): Mod {
             finalizeCount++
             lastConfirmation = prepared.confirmation
-            val folder = installer.finalizeInstall(prepared, InstallerSelection(selectedOptionIds), cancellationSignal)
+            val folder = installer.finalizeInstall(prepared, InstallerSelection(selectedOptionIds), cancellationSignal,
+                warnings = installWarnings)
             return Mod(folder.name, folder.name, folder.absolutePath, true, priority, ModType.LOOSE)
         }
         override fun saveCurrentMods(mods: List<Mod>) { state = mods; saveCount++ }
