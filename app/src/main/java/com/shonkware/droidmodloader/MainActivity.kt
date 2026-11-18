@@ -1,6 +1,5 @@
 package com.shonkware.droidmodloader
 
-import android.app.AlertDialog
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.os.Bundle
@@ -19,6 +18,7 @@ import com.shonkware.droidmodloader.engine.storage.AllFilesAccessManager
 import com.shonkware.droidmodloader.ui.DroidModLoaderScreen
 import com.shonkware.droidmodloader.ui.SecondScreenController
 import com.shonkware.droidmodloader.ui.theme.DmlTheme
+import com.skyrimsuite.ui.SuiteAlertDialog
 import java.io.File
 
 class MainActivity : ComponentActivity() {
@@ -83,25 +83,21 @@ class MainActivity : ComponentActivity() {
                 }
             }
             val deleteMod = session.pendingDeleteMod
-            DisposableEffect(deleteMod) {
-                val dialog = deleteMod?.let { mod ->
-                    AlertDialog.Builder(this@MainActivity)
-                        .setTitle("Delete Mod")
-                        .setMessage(
-                            "Are you sure you want to delete '${mod.name}'?\n\n" +
-                                "This will permanently remove this installed mod folder from Droid Mod Loader.\n\n" +
-                                "Run Deploy afterward to remove its deployed files from the selected game Data folder."
-                        )
-                        .setPositiveButton("Delete") { _, _ -> session.confirmDelete(mod) }
-                        .setNegativeButton("Cancel") { _, _ -> session.cancelDelete() }
-                        .setOnCancelListener { session.cancelDelete() }
-                        .show()
-                }
-                // Dismiss the old window without cancelling retained intent.
-                onDispose { dialog?.dismiss() }
-            }
             DmlTheme {
                 DroidModLoaderScreen(state = state, actions = actions)
+                if (deleteMod != null) {
+                    SuiteAlertDialog(
+                        title = "Delete Mod",
+                        body = "Are you sure you want to delete '${deleteMod.name}'?\n\n" +
+                            "This will permanently remove this installed mod folder from Droid Mod Loader.\n\n" +
+                            "Run Deploy afterward to remove its deployed files from the selected game Data folder.",
+                        confirmLabel = "Delete",
+                        dismissLabel = "Cancel",
+                        destructive = true,
+                        onConfirm = { session.confirmDelete(deleteMod) },
+                        onDismiss = { session.cancelDelete() }
+                    )
+                }
             }
         }
     }
