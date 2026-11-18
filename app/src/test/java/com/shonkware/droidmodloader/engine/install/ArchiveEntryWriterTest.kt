@@ -116,7 +116,36 @@ class ArchiveEntryWriterTest {
     }
 
     @Test
-    fun `rejects duplicate normalized paths`() {
+    fun `repeated directory entries are accepted`() {
+        withFixture("repeated-directory") { fixture ->
+            val writer = fixture.writer()
+
+            repeat(33) {
+                writer.writeDirectory("Black/Meshes")
+            }
+
+            writer.writeFile("Black/Meshes/pack.nif") {
+                it.write("mesh".toByteArray())
+            }
+
+            assertTrue(
+                File(
+                    fixture.outputDir,
+                    "Black/Meshes"
+                ).isDirectory
+            )
+            assertEquals(
+                "mesh",
+                File(
+                    fixture.outputDir,
+                    "Black/Meshes/pack.nif"
+                ).readText()
+            )
+        }
+    }
+
+    @Test
+    fun `later duplicate entries replace earlier ones`() {
         withFixture("duplicate") { fixture ->
             val writer = fixture.writer()
 
@@ -124,21 +153,14 @@ class ArchiveEntryWriterTest {
                 it.write("first".toByteArray())
             }
 
-            val failure = expectReadFailure {
-                writer.writeFile(
-                    "Data//example.txt"
-                ) {
-                    it.write("second".toByteArray())
-                }
+            writer.writeFile(
+                "Data//example.txt"
+            ) {
+                it.write("second".toByteArray())
             }
 
             assertEquals(
-                ArchiveReadFailureCode
-                    .DUPLICATE_ENTRY_PATH,
-                failure.code
-            )
-            assertEquals(
-                "first",
+                "second",
                 File(
                     fixture.outputDir,
                     "Data/example.txt"

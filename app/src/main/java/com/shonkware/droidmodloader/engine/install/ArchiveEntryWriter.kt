@@ -61,9 +61,6 @@ class ArchiveEntryWriter internal constructor(
     private val canonicalChildSpellings =
         mutableMapOf<String, String>()
 
-    private val registeredRawPaths =
-        mutableSetOf<String>()
-
     private var acceptedEntryCount = 0
     private var totalBytesWritten = 0L
     private var completedFileCount = 0
@@ -138,30 +135,11 @@ class ArchiveEntryWriter internal constructor(
             relativePath = entry.relativePath
         )
 
-        if (entry.outputFile.exists()) {
-            if (!entry.caseCollision) {
-                throw ArchiveReadException(
-                    code =
-                        ArchiveReadFailureCode.DUPLICATE_ENTRY_PATH,
-                    message =
-                        "Archive output already exists for entry: " +
-                                entry.relativePath
-                )
-            }
-
-            if (entry.outputFile.isDirectory) {
-                throw ioFailure(
-                    "Archive file collides with an extracted directory: " +
-                            entry.relativePath
-                )
-            }
-
-            if (!entry.outputFile.delete()) {
-                throw ioFailure(
-                    "Could not replace the case-colliding file: " +
-                            entry.relativePath
-                )
-            }
+        if (entry.outputFile.isDirectory) {
+            throw ioFailure(
+                "Archive file collides with an extracted directory: " +
+                        entry.relativePath
+            )
         }
 
         ensureUsableSpace(
@@ -267,7 +245,7 @@ class ArchiveEntryWriter internal constructor(
         val outputFile = try {
             ArchiveEntryPath.safeResolve(
                 root = outputDir,
-                relativePath = canonical.path
+                relativePath = canonical
             )
         } catch (exception: IOException) {
             throw ArchiveReadException(
@@ -280,12 +258,11 @@ class ArchiveEntryWriter internal constructor(
             )
         }
 
-        registerEntryPath(relativePath)
+        registerEntryPath()
 
         return ResolvedArchiveEntry(
-            relativePath = canonical.path,
-            outputFile = outputFile,
-            caseCollision = canonical.caseCollision
+            relativePath = canonical,
+            outputFile = outputFile
         )
     }
 
@@ -296,11 +273,10 @@ class ArchiveEntryWriter internal constructor(
      */
     private fun canonicalizePath(
         relativePath: String
-    ): CanonicalPath {
+    ): String {
         val parts = relativePath.split('/')
         val resolved = ArrayList<String>(parts.size)
         var parentKey = ""
-        var caseCollision = false
 
         for (part in parts) {
             val partKey = comparisonKey(part)
@@ -312,19 +288,13 @@ class ArchiveEntryWriter internal constructor(
                 canonicalChildSpellings[childKey] = part
                 resolved.add(part)
             } else {
-                if (canonicalPart != part) {
-                    caseCollision = true
-                }
                 resolved.add(canonicalPart)
             }
 
             parentKey = childKey
         }
 
-        return CanonicalPath(
-            path = resolved.joinToString("/"),
-            caseCollision = caseCollision
-        )
+        return resolved.joinToString("/")
     }
 
     private fun comparisonKey(
@@ -335,19 +305,7 @@ class ArchiveEntryWriter internal constructor(
             .lowercase(Locale.ROOT)
     }
 
-    private fun registerEntryPath(
-        relativePath: String
-    ) {
-        if (!registeredRawPaths.add(relativePath)) {
-            throw ArchiveReadException(
-                code =
-                    ArchiveReadFailureCode.DUPLICATE_ENTRY_PATH,
-                message =
-                    "Archive entries resolve to the same output path: " +
-                            relativePath
-            )
-        }
-
+    private fun registerEntryPath() {
         if (
             acceptedEntryCount >=
             limits.maxEntries
@@ -483,13 +441,7 @@ class ArchiveEntryWriter internal constructor(
 
     private data class ResolvedArchiveEntry(
         val relativePath: String,
-        val outputFile: File,
-        val caseCollision: Boolean
-    )
-
-    private data class CanonicalPath(
-        val path: String,
-        val caseCollision: Boolean
+        val outputFile: File
     )
 
     private inner class LimitEnforcingOutputStream(

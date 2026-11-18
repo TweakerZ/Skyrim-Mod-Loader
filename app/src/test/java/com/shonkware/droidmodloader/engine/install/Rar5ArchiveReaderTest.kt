@@ -72,10 +72,10 @@ class Rar5ArchiveReaderTest {
         }
     }
 
-    @Test fun `duplicate names use existing writer checks`() {
-        refused(ArchiveReadFailureCode.DUPLICATE_ENTRY_PATH) {
-            read(RarTestArchives.rar5(RarTestArchives.entry("same"), RarTestArchives.entry("same")))
-        }
+    @Test fun `duplicate names keep the last entry`() {
+        val out = read(RarTestArchives.rar5(RarTestArchives.entry("same", "first".toByteArray()), RarTestArchives.entry("same", "second".toByteArray())))
+        assertEquals(listOf("same"), out.list()!!.toList())
+        assertEquals("second", File(out, "same").readText())
     }
 
     @Test fun `bad CRC missing end and truncated payload refuse`() {

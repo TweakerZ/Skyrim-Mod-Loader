@@ -192,7 +192,7 @@ class ZipArchiveReaderTest {
     }
 
     @Test
-    fun `duplicate zip destinations are rejected`() {
+    fun `duplicate zip destinations keep the last entry`() {
         withFixture("duplicate") { fixture ->
             createZip(fixture.archive) { zip ->
                 zip.putNextEntry(
@@ -208,16 +208,10 @@ class ZipArchiveReaderTest {
                 zip.closeEntry()
             }
 
-            val failure = expectReadFailure {
-                readArchive(fixture)
-            }
+            readArchive(fixture)
 
             assertEquals(
-                ArchiveReadFailureCode.DUPLICATE_ENTRY_PATH,
-                failure.code
-            )
-            assertEquals(
-                "first",
+                "second",
                 File(
                     fixture.outputDir,
                     "Data/example.txt"

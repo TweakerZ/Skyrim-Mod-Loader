@@ -195,7 +195,7 @@ class SevenZipArchiveReaderTest {
     }
 
     @Test
-    fun `duplicate seven z destinations are rejected`() {
+    fun `duplicate seven z destinations keep the last entry`() {
         withFixture("duplicate") { fixture ->
             createSevenZ(
                 archive = fixture.archive
@@ -210,16 +210,10 @@ class SevenZipArchiveReaderTest {
                 )
             }
 
-            val failure = expectReadFailure {
-                readArchive(fixture)
-            }
+            readArchive(fixture)
 
             assertEquals(
-                ArchiveReadFailureCode.DUPLICATE_ENTRY_PATH,
-                failure.code
-            )
-            assertEquals(
-                "first",
+                "second",
                 File(
                     fixture.outputDir,
                     "Data/example.txt"
