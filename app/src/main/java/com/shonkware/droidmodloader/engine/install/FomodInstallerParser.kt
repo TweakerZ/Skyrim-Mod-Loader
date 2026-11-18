@@ -6,7 +6,9 @@ import org.w3c.dom.Node
 import org.xml.sax.InputSource
 import java.io.File
 import java.io.StringReader
+import java.nio.ByteBuffer
 import java.nio.charset.Charset
+import java.nio.charset.CodingErrorAction
 import javax.xml.parsers.DocumentBuilder
 import javax.xml.parsers.DocumentBuilderFactory
 
@@ -41,12 +43,11 @@ class FomodInstallerParser {
 
     fun parse(contentRoot: File, moduleConfigFile: File, modName: String): InstallerPlan {
         val warnings = mutableListOf<String>()
-        val document = parseModuleConfigXml(moduleConfigFile)
+        val fomodDir = moduleConfigFile.parentFile
+        val index = ContentIndex(contentRoot)
+        val document = parseModuleConfigXml(moduleConfigFile, index, fomodDir)
         document.documentElement.normalize()
         val root = document.documentElement
-        val fomodDir = moduleConfigFile.parentFile
-
-        val index = ContentIndex(contentRoot)
 
         val requiredFiles = parseFileList(
             container = findDirectChild(root, "requiredInstallFiles"),
@@ -610,7 +611,11 @@ class FomodInstallerParser {
      * Parses a ModuleConfig.xml file, tolerating incorrect encoding declarations
      * and XML namespaces.
      */
-    private fun parseModuleConfigXml(file: File): Document {
+    private fun parseModuleConfigXml(
+        file: File,
+        index: ContentIndex,
+        fomodDir: File?
+    ): Document {
         val factory = DocumentBuilderFactory.newInstance().apply {
             isNamespaceAware = true
             isExpandEntityReferences = false
@@ -621,19 +626,91 @@ class FomodInstallerParser {
             }
         }
         val builder: DocumentBuilder = factory.newDocumentBuilder()
-        return builder.parse(InputSource(StringReader(decodeXmlText(file))))
+        return builder.parse(InputSource(StringReader(decodeXmlText(file, index, fomodDir))))
     }
 
-    private fun decodeXmlText(file: File): String {
+    /**
+     * Decodes the config as strict UTF-8 when possible, then falls back to the
+     * legacy Windows code pages. windows-1252 and windows-1251 both decode any
+     * byte sequence, so the winner is the one whose `source` paths match files
+     * in the extracted archive.
+     */
+    private fun decodeXmlText(
+        file: File,
+        index: ContentIndex,
+        fomodDir: File?
+    ): String {
         val raw = file.readBytes()
-        for (enc in encodingCandidates(raw)) {
-            val decoded = runCatching { String(raw, Charset.forName(enc)) }.getOrNull()
-            if (decoded != null) return decoded.trimStart('\uFEFF')
+
+        for (encoding in explicitEncodingCandidates(raw)) {
+            strictDecode(raw, encoding)?.let { return it.trimStart('\uFEFF') }
         }
+
+        strictDecode(raw, "UTF-8")?.let { return it.trimStart('\uFEFF') }
+
+        val legacy = LEGACY_ENCODINGS
+            .mapNotNull { encoding ->
+                strictDecode(raw, encoding)?.let { text -> encoding to text }
+            }
+            .maxWithOrNull(
+                compareBy<Pair<String, String>> {
+                    scoreResolvableSources(it.second, index, fomodDir)
+                }.thenBy {
+                    when {
+                        it.first == declaredEncoding(raw) -> 2
+                        it.first == "windows-1252" -> 1
+                        else -> 0
+                    }
+                }
+            )
+        if (legacy != null) return legacy.second.trimStart('\uFEFF')
+
         return String(raw, Charset.forName("ISO-8859-1")).trimStart('\uFEFF')
     }
 
-    private fun encodingCandidates(raw: ByteArray): List<String> {
+    /**
+     * Reads the XML declaration's encoding without assuming the body encoding.
+     * ASCII-compatible declarations survive the ISO-8859-1 preview.
+     */
+    private fun declaredEncoding(raw: ByteArray): String? {
+        val head = String(
+            raw,
+            0,
+            minOf(raw.size, 256),
+            Charset.forName("ISO-8859-1")
+        )
+        return DECLARED_ENCODING.find(head)
+            ?.groupValues
+            ?.get(1)
+            ?.lowercase()
+    }
+
+    private fun strictDecode(raw: ByteArray, encoding: String): String? {
+        return runCatching {
+            Charset.forName(encoding).newDecoder()
+                .onMalformedInput(CodingErrorAction.REPORT)
+                .onUnmappableCharacter(CodingErrorAction.REPORT)
+                .decode(ByteBuffer.wrap(raw))
+                .toString()
+        }.getOrNull()
+    }
+
+    private fun scoreResolvableSources(
+        text: String,
+        index: ContentIndex,
+        fomodDir: File?
+    ): Int {
+        return SOURCE_ATTRIBUTE.findAll(text).count { match ->
+            val source = match.groupValues[1].trim()
+            source.isNotEmpty() && index.resolve(source, fomodDir) != null
+        }
+    }
+
+    /**
+     * Encodings that a byte-order mark or a UTF-16 `<?` signature identifies
+     * without guessing.
+     */
+    private fun explicitEncodingCandidates(raw: ByteArray): List<String> {
         val b0 = raw.getOrNull(0)?.toInt()?.and(0xFF) ?: -1
         val b1 = raw.getOrNull(1)?.toInt()?.and(0xFF) ?: -1
         val b2 = raw.getOrNull(2)?.toInt()?.and(0xFF) ?: -1
@@ -641,13 +718,19 @@ class FomodInstallerParser {
         return when {
             b0 == 0xFF && b1 == 0xFE -> listOf("UTF-16")   // UTF-16 LE BOM
             b0 == 0xFE && b1 == 0xFF -> listOf("UTF-16")   // UTF-16 BE BOM
-            b0 == 0xEF && b1 == 0xBB && b2 == 0xBF -> listOf("UTF-8", "UTF-16", "ISO-8859-1")
+            b0 == 0xEF && b1 == 0xBB && b2 == 0xBF -> listOf("UTF-8")
             b0 == 0x3C && b1 == 0x00 && b2 == 0x3F && b3 == 0x00 ->
-                listOf("UTF-16LE", "UTF-8", "ISO-8859-1") // '<?' UTF-16 LE (no BOM)
+                listOf("UTF-16LE") // '<?' UTF-16 LE (no BOM)
             b0 == 0x00 && b1 == 0x3C && b2 == 0x00 && b3 == 0x3F ->
-                listOf("UTF-16BE", "UTF-8", "ISO-8859-1") // '<?' UTF-16 BE (no BOM)
-            else -> listOf("UTF-8", "ISO-8859-1")
+                listOf("UTF-16BE") // '<?' UTF-16 BE (no BOM)
+            else -> emptyList()
         }
+    }
+
+    private companion object {
+        val LEGACY_ENCODINGS = listOf("windows-1252", "windows-1251")
+        val SOURCE_ATTRIBUTE = Regex("""source\s*=\s*["']([^"']*)["']""")
+        val DECLARED_ENCODING = Regex("""encoding\s*=\s*["']([^"']+)["']""")
     }
 
     /** Case-insensitive index of the extracted archive, mirroring Windows semantics. */

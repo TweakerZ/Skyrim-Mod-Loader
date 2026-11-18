@@ -481,6 +481,165 @@ class FomodInstallerParserTest {
         assertEquals(1, plan.groups.size)
     }
 
+    @Test
+    fun `parses a windows-1252 config with non-ascii source paths`() {
+        val fixture = fixture(
+            xml = """
+                <config>
+                  <moduleName>Café Mod</moduleName>
+                  <installSteps order="Explicit">
+                    <installStep name="Installation">
+                      <optionalFileGroups order="Explicit">
+                        <group name="Installation" type="SelectExactlyOne">
+                          <plugins order="Explicit">
+                            <plugin name="Core">
+                              <files>
+                                <file source="Meshes/Café.nif" destination="meshes/Café.nif" />
+                              </files>
+                              <typeDescriptor><type name="Required" /></typeDescriptor>
+                            </plugin>
+                          </plugins>
+                        </group>
+                      </optionalFileGroups>
+                    </installStep>
+                  </installSteps>
+                </config>
+            """.trimIndent(),
+            files = listOf("Meshes/Café.nif"),
+            encoding = java.nio.charset.Charset.forName("windows-1252")
+        )
+
+        val plan = fixture.parse()
+
+        assertEquals("Café Mod", plan.displayName)
+        assertEquals(
+            "Meshes/Café.nif",
+            plan.groups.single().options.single().files.single().source
+        )
+        assertTrue(plan.warnings.none { it.contains("missing path") })
+    }
+
+    @Test
+    fun `parses a windows-1251 config with cyrillic source paths`() {
+        val fixture = fixture(
+            xml = """
+                <config>
+                  <moduleName>Броня</moduleName>
+                  <installSteps order="Explicit">
+                    <installStep name="Installation">
+                      <optionalFileGroups order="Explicit">
+                        <group name="Installation" type="SelectExactlyOne">
+                          <plugins order="Explicit">
+                            <plugin name="Core">
+                              <files>
+                                <file source="Meshes/Броня.nif" destination="meshes/Броня.nif" />
+                              </files>
+                              <typeDescriptor><type name="Required" /></typeDescriptor>
+                            </plugin>
+                          </plugins>
+                        </group>
+                      </optionalFileGroups>
+                    </installStep>
+                  </installSteps>
+                </config>
+            """.trimIndent(),
+            files = listOf("Meshes/Броня.nif"),
+            encoding = java.nio.charset.Charset.forName("windows-1251")
+        )
+
+        val plan = fixture.parse()
+
+        assertEquals("Броня", plan.displayName)
+        assertEquals(
+            "Meshes/Броня.nif",
+            plan.groups.single().options.single().files.single().source
+        )
+        assertTrue(plan.warnings.none { it.contains("missing path") })
+    }
+
+    @Test
+    fun `declared legacy encoding wins when source paths tie`() {
+        val fixture = fixture(
+            xml = """
+                <?xml version="1.0" encoding="windows-1251"?>
+                <config>
+                  <moduleName>Броня</moduleName>
+                  <installSteps order="Explicit">
+                    <installStep name="Installation">
+                      <optionalFileGroups order="Explicit">
+                        <group name="Installation" type="SelectExactlyOne">
+                          <plugins order="Explicit">
+                            <plugin name="Core">
+                              <files>
+                                <file source="core.txt" destination="core.txt" />
+                              </files>
+                              <typeDescriptor><type name="Required" /></typeDescriptor>
+                            </plugin>
+                          </plugins>
+                        </group>
+                      </optionalFileGroups>
+                    </installStep>
+                  </installSteps>
+                </config>
+            """.trimIndent(),
+            files = listOf("core.txt"),
+            encoding = java.nio.charset.Charset.forName("windows-1251")
+        )
+
+        val plan = fixture.parse()
+
+        assertEquals("Броня", plan.displayName)
+    }
+
+    @Test
+    fun `unsupported dependency conditions warn and stay closed`() {
+        val fixture = fixture(
+            xml = """
+                <config>
+                  <moduleName>Unknown Dependency</moduleName>
+                  <installSteps>
+                    <installStep name="Main">
+                      <optionalFileGroups>
+                        <group name="Main" type="SelectAny">
+                          <plugins>
+                            <plugin name="Core">
+                              <files><file source="core.txt" destination="core.txt" /></files>
+                              <typeDescriptor><type name="Required" /></typeDescriptor>
+                            </plugin>
+                          </plugins>
+                        </group>
+                      </optionalFileGroups>
+                    </installStep>
+                  </installSteps>
+                  <conditionalFileInstalls>
+                    <patterns>
+                      <pattern>
+                        <dependencies operator="And">
+                          <mysteryDependency value="yes" />
+                        </dependencies>
+                        <files>
+                          <file source="patch.txt" destination="patch.txt" />
+                        </files>
+                      </pattern>
+                    </patterns>
+                  </conditionalFileInstalls>
+                </config>
+            """.trimIndent(),
+            files = listOf("core.txt", "patch.txt")
+        )
+
+        val plan = fixture.parse()
+        val files = plan.resolveInstallFiles(plan.initialSelection())
+
+        assertTrue(
+            plan.warnings.any {
+                it.contains("unsupported dependency condition")
+            }
+        )
+        assertTrue(files.any { it.destination == "core.txt" })
+        assertFalse(files.any { it.destination == "patch.txt" })
+    }
+
     private data class Fixture(
         val root: File,
         val config: File
