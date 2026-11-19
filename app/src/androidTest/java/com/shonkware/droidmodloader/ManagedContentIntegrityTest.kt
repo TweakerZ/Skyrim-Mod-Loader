@@ -118,6 +118,7 @@ class ManagedContentIntegrityTest {
             }
             }
         }
+        compose.onNodeWithText("Show Details").performScrollTo().performClick()
         compose.onNodeWithText("Cancel File Check").performScrollTo().assertIsNotEnabled()
         repeat(2) { compose.onNodeWithText("Check Recorded Files").performScrollTo().performClick() }
         compose.runOnIdle {

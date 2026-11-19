@@ -49,6 +49,7 @@ class OperationHistoryUiTest {
 
     @Test fun waitingDetailsAndExpandedIntentSurviveActivityRecreation() {
         compose.activityRule.scenario.onActivity(::render)
+        compose.onNodeWithText("Show Details").performScrollTo().performClick()
         compose.onNodeWithText("Archive install: Waiting for installer choices").assertIsDisplayed()
         compose.onNodeWithContentDescription("Details for attempt ${record.id}").performScrollTo().performClick()
         compose.onNodeWithText("Saved Data folder: /fixture/Data", substring = true).performScrollTo().assertIsDisplayed()
@@ -64,6 +65,7 @@ class OperationHistoryUiTest {
         history = OperationHistorySnapshot(listOf(record.copy(interrupted = true)),
             OperationHistoryAvailability.NOT_SAVED, "Fixture write failed")
         compose.activityRule.scenario.onActivity(::render)
+        compose.onNodeWithText("Show Details").performScrollTo().performClick()
         compose.onNodeWithText("History changes are not saved.", substring = true).assertIsDisplayed()
         compose.onNodeWithText("Archive install: Interrupted: outcome unknown").assertIsDisplayed()
         compose.runOnIdle { history = history.copy(availability = OperationHistoryAvailability.UNAVAILABLE, reason = "Fixture corrupt") }

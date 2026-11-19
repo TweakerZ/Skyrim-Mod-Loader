@@ -165,6 +165,7 @@ class DeploymentHealthTest {
             }
             }
         }
+        compose.onNodeWithText("Show Details").performScrollTo().performClick()
         compose.onNodeWithText("Show Deployment Details").performClick()
         compose.onNodeWithText(health.toDebugSummary()).assertIsDisplayed()
         compose.onNodeWithText("Refresh Deployment Summary").performScrollTo().performClick()

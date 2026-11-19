@@ -238,6 +238,7 @@ class InfoPopoverTest {
                 }
             }
         }
+        compose.onNodeWithText("Show Details").performScrollTo().performClick()
         compose.onNodeWithContentDescription("About shared logs").performScrollTo().performTouchInput { click() }
         compose.onNodeWithText("Reports include diagnostic information, logs, and full folder paths, which may reveal personal names. Only share with someone you trust. Nothing is uploaded automatically.")
             .assertIsDisplayed()
