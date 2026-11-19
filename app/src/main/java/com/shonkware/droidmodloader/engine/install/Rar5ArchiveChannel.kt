@@ -57,7 +57,7 @@ internal class Rar5ArchiveChannel(
         ) {
             val exception = ArchiveReadException(
                 ArchiveReadFailureCode.HEADER_LIMIT_EXCEEDED,
-                "RAR5 headers exceed DML's safe metadata read budget " +
+                "RAR5 headers exceed SML's safe metadata read budget " +
                     "($maxHeaderBytes bytes or $maxHeaderReads reads)."
             )
             failure = exception

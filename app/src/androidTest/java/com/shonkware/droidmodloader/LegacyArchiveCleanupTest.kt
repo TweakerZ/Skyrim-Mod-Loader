@@ -73,12 +73,12 @@ class LegacyArchiveCleanupTest {
                 onCleanOldArchiveCopies = { runner.runExclusiveInBackground { executions++ } }
             )
         }
-        compose.onNodeWithText("Remove Old DML Copies…").performClick()
+        compose.onNodeWithText("Remove Old SML Copies…").performClick()
         compose.runOnIdle { assertTrue(scheduled.isEmpty()) }
         compose.onNodeWithText("Cancel").performClick()
         compose.runOnIdle { assertTrue(scheduled.isEmpty()) }
         repeat(2) {
-            compose.onNodeWithText("Remove Old DML Copies…").performClick()
+            compose.onNodeWithText("Remove Old SML Copies…").performClick()
             compose.onNodeWithText("Remove Copies").performClick()
         }
         compose.runOnIdle {
@@ -86,7 +86,7 @@ class LegacyArchiveCleanupTest {
             assertEquals(0, executions)
             busy = true
         }
-        compose.onNodeWithText("Remove Old DML Copies…").assertIsNotEnabled()
+        compose.onNodeWithText("Remove Old SML Copies…").assertIsNotEnabled()
         scheduled.single().invoke()
         compose.runOnIdle {
             assertEquals(1, executions)

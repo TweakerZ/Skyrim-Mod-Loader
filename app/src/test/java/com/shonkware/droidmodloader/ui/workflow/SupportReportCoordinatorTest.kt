@@ -16,7 +16,7 @@ class SupportReportCoordinatorTest {
 
     @Test
     fun `share text contains app state and persistent log`() {
-        val root = Files.createTempDirectory("dml-support-report").toFile()
+        val root = Files.createTempDirectory("sml-support-report").toFile()
         val writer = SessionLogWriter { root }
         writer.append("persisted line")
         val coordinator = SupportReportCoordinator(

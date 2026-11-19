@@ -90,7 +90,7 @@ class DeploymentStoragePreflightTest {
         for (summary in listOf(f.service.buildDeploymentPlanDebugSummary(GAME), f.service.buildFullRedeployPlanDebugSummary(GAME))) {
             assertTrue(summary.contains("Not enough free storage for the deployment copy budget"))
             assertTrue(summary.contains("Available: 0 bytes"))
-            assertTrue(summary.contains("DML managed simulated target"))
+            assertTrue(summary.contains("SML managed simulated target"))
         }
         assertFalse(f.deploy.exists())
     }

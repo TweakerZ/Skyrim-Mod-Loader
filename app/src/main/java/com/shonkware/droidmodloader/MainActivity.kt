@@ -89,7 +89,7 @@ class MainActivity : ComponentActivity() {
                     SuiteAlertDialog(
                         title = "Delete Mod",
                         body = "Are you sure you want to delete '${deleteMod.name}'?\n\n" +
-                            "This will permanently remove this installed mod folder from Droid Mod Loader.\n\n" +
+                            "This will permanently remove this installed mod folder from Skyrim Mod Loader.\n\n" +
                             "Run Deploy afterward to remove its deployed files from the selected game Data folder.",
                         confirmLabel = "Delete",
                         dismissLabel = "Cancel",

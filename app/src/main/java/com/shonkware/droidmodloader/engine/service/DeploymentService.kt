@@ -721,11 +721,11 @@ internal class DeploymentService(
             val name = target.targetType.displayName
             if (target.deployDirectory == null) notes.add("$name target unavailable: ${target.unavailableReason}") else {
                 requirements.add(StorageWriteRequirement("$name deployment copies", target.deployDirectory,
-                    if (target.identity.mode in setOf("simulated", "root_simulated")) "DML managed simulated target"
-                    else "Selected target; DML manages only recorded files"))
+                    if (target.identity.mode in setOf("simulated", "root_simulated")) "SML managed simulated target"
+                    else "Selected target; SML manages only recorded files"))
             }
             requirements.add(StorageWriteRequirement("$name new backups", target.backupDirectory,
-                "DML managed backup directory"))
+                "SML managed backup directory"))
         }
         return requirements to notes
     }

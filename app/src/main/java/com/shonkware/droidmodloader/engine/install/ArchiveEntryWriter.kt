@@ -235,7 +235,7 @@ class ArchiveEntryWriter internal constructor(
                     ArchiveReadFailureCode
                         .PATH_LENGTH_LIMIT_EXCEEDED,
                 message =
-                    "Archive entry path exceeds DML's limit: " +
+                    "Archive entry path exceeds SML's limit: " +
                             relativePath
             )
         }
@@ -503,7 +503,7 @@ class ArchiveEntryWriter internal constructor(
                         ArchiveReadFailureCode
                             .FILE_SIZE_LIMIT_EXCEEDED,
                     message =
-                        "Archive entry exceeds DML's per-file " +
+                        "Archive entry exceeds SML's per-file " +
                                 "extraction limit: $relativePath"
                 )
             }
@@ -518,7 +518,7 @@ class ArchiveEntryWriter internal constructor(
                         ArchiveReadFailureCode
                             .TOTAL_SIZE_LIMIT_EXCEEDED,
                     message =
-                        "Archive exceeds DML's total " +
+                        "Archive exceeds SML's total " +
                                 "extraction limit."
                 )
             }

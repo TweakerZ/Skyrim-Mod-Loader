@@ -188,7 +188,7 @@ class Rar5ArchiveReader internal constructor(
         if (!header.isDirectory && header.rar5WinSize > maxDictionaryBytes) fail(
             ArchiveReadFailureCode.DECODER_MEMORY_LIMIT_EXCEEDED,
             "RAR5 declares a ${header.rar5WinSize}-byte dictionary, above " +
-                "DML's $maxDictionaryBytes-byte decoder dictionary limit."
+                "SML's $maxDictionaryBytes-byte decoder dictionary limit."
         )
         val path = try {
             ArchiveEntryPath.normalize(header.fileName)
@@ -223,7 +223,7 @@ class Rar5ArchiveReader internal constructor(
         }
         val message = when (code) {
             ArchiveReadFailureCode.DECODER_MEMORY_LIMIT_EXCEEDED ->
-                "RAR5 exceeds DML's $maxDictionaryBytes-byte decoder dictionary limit: $name"
+                "RAR5 exceeds SML's $maxDictionaryBytes-byte decoder dictionary limit: $name"
             ArchiveReadFailureCode.PASSWORD_PROTECTED_OR_ENCRYPTED ->
                 "Password-protected or encrypted RAR5 archives are not supported: $name"
             ArchiveReadFailureCode.IO_FAILURE -> "Could not read or write RAR5 archive data: $name"

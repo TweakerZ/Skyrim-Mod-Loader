@@ -87,7 +87,7 @@ class InstalledModDirectoryReplacer internal constructor(
                 )
             } catch (exception: Exception) {
                 val failure = IOException(
-                    "The existing mod was backed up, but DML " +
+                    "The existing mod was backed up, but SML " +
                             "could not record the replacement state.",
                     exception
                 )
@@ -140,7 +140,7 @@ class InstalledModDirectoryReplacer internal constructor(
             )
         } catch (exception: Exception) {
             throw IOException(
-                "The replacement was promoted, but DML could not " +
+                "The replacement was promoted, but SML could not " +
                         "record its completed state. The transaction " +
                         "was retained for recovery.",
                 exception

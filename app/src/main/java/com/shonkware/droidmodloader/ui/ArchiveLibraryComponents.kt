@@ -55,8 +55,8 @@ fun ArchiveFolderSetupDialog(
         text = {
             Text(
                 "Select the folder where you keep downloaded mod archives. " +
-                    "DML will scan files directly inside it for ZIP, 7Z, and RAR archives " +
-                    "and remember the folder. When you install a mod, DML uses a temporary archive copy " +
+                    "SML will scan files directly inside it for ZIP, 7Z, and RAR archives " +
+                    "and remember the folder. When you install a mod, SML uses a temporary archive copy " +
                     "rather than keeping another archive. The original file stays where it is."
             )
         },
@@ -207,7 +207,7 @@ fun ArchiveLibraryPanelDialog(
                             enabled = controlsEnabled,
                             onClick = { showCleanupConfirmation = true }
                         ) {
-                            Text("Remove Old DML Copies…")
+                            Text("Remove Old SML Copies…")
                         }
                     }
                     item(key = "archive-search") {
@@ -251,11 +251,11 @@ fun ArchiveLibraryPanelDialog(
     if (showCleanupConfirmation) {
         AlertDialog(
             onDismissRequest = { showCleanupConfirmation = false },
-            title = { Text("Remove old DML archive copies?") },
+            title = { Text("Remove old SML archive copies?") },
             text = {
                 Column(Modifier.verticalScroll(rememberScrollState())) {
                     Text(
-                        "Checks all stored profiles and removes only old DML copies that match a separate " +
+                        "Checks all stored profiles and removes only old SML copies that match a separate " +
                             "surviving original byte for byte. Originals, installer sessions, and import history " +
                             "stay unchanged. Missing, changed, selected, or uncertain files are preserved. " +
                             "Verification reads both archives and can take time. Results appear in the log."

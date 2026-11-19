@@ -21,8 +21,8 @@ internal object AppAttentionPresentationMapper {
             AppAttentionKind.GAME_INSTALLATION_RESELECTION -> {
                 AppAttentionPresentation(
                     title = "Choose the game folder again",
-                    message = "DML can no longer use the saved game folder. " +
-                        "Choose the installed game's main folder again so DML can check it " +
+                    message = "SML can no longer use the saved game folder. " +
+                        "Choose the installed game's main folder again so SML can check it " +
                         "and find its Data folder.",
                     primaryAction = attention.actions.firstOrNull {
                         it == AppAttentionAction.SELECT_GAME_FOLDER
@@ -38,7 +38,7 @@ internal object AppAttentionPresentationMapper {
             AppAttentionKind.DEPLOY_RECOVERY -> {
                 AppAttentionPresentation(
                     title = "Unfinished deployment",
-                    message = "A deployment still needs review, or DML cannot read its saved record. " +
+                    message = "A deployment still needs review, or SML cannot read its saved record. " +
                         "View the details before continuing. Marking it reviewed or hiding this " +
                         "notification does not repair files or allow another deployment.",
                     primaryAction = attention.actions.firstOrNull {
@@ -57,7 +57,7 @@ internal object AppAttentionPresentationMapper {
             AppAttentionKind.INSTALL_RECOVERY -> {
                 AppAttentionPresentation(
                     title = "Unfinished installation",
-                    message = "DML could not finish recovering an interrupted mod installation. " +
+                    message = "SML could not finish recovering an interrupted mod installation. " +
                         "The affected mod may be incomplete. Hiding this notification " +
                         "does not fix the installation.",
                     primaryAction = attention.actions.firstOrNull { it == AppAttentionAction.VIEW_DEPLOY_RECOVERY },

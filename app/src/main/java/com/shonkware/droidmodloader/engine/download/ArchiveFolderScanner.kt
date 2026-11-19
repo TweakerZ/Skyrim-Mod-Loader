@@ -32,14 +32,14 @@ class ArchiveFolderScanner(
             File(folderPath).canonicalFile
         } catch (t: IOException) {
             throw ArchiveFolderAccessException(
-                "DML could not resolve the selected archive folder.",
+                "SML could not resolve the selected archive folder.",
                 t
             )
         }
 
         if (!root.exists() || !root.isDirectory || !root.canRead()) {
             throw ArchiveFolderAccessException(
-                "DML cannot read the selected archive folder. Choose the folder again."
+                "SML cannot read the selected archive folder. Choose the folder again."
             )
         }
 
@@ -86,7 +86,7 @@ class ArchiveFolderScanner(
                 ?: emptyList()
         } catch (t: Throwable) {
             throw ArchiveFolderAccessException(
-                "DML could not scan the selected archive folder. Choose the folder again or tap Refresh.",
+                "SML could not scan the selected archive folder. Choose the folder again or tap Refresh.",
                 t
             )
         }

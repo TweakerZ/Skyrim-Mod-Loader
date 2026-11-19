@@ -103,7 +103,7 @@ internal class LegacyArchiveCleanup(
                 Files.delete(entry.toPath())
                 removed++
                 bytes += proof.first().second.size
-                report("Removed old DML copy: ${entry.name}")
+                report("Removed old SML copy: ${entry.name}")
             } catch (cancelled: InterruptedIOException) {
                 throw cancelled
             } catch (failure: IOException) {

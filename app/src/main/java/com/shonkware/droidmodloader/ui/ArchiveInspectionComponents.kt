@@ -70,7 +70,7 @@ internal fun archiveInspectionDetails(report: ArchiveInspectionReport): List<Str
         val facts = inspection.extraction
         add("Archive type: ${facts.format.diagnosticLabel}")
         add("Filename extension matches archive type: ${if (facts.extensionMismatch) "no" else "yes"}")
-        add("Archive was unpacked within DML's safety limits. This does not prove the mod will work in the game.")
+        add("Archive was unpacked within SML's safety limits. This does not prove the mod will work in the game.")
         add("Archive size: ${facts.archiveBytes} bytes; unpacked size: ${facts.expandedBytes} bytes")
         add("Archive entries: ${facts.acceptedEntries}; files unpacked: ${facts.completedFiles}")
         fun observed(value: Boolean?) = when (value) { true -> "yes"; false -> "no"; null -> "unknown" }

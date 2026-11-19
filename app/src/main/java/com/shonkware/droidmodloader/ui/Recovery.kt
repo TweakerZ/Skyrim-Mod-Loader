@@ -72,7 +72,7 @@ fun RecoveryToolsCard(
             )
 
             Text(
-                text = "DML cannot safely retry or undo this deployment from the saved record. Having a backup alone does not make that safe.",
+                text = "SML cannot safely retry or undo this deployment from the saved record. Having a backup alone does not make that safe.",
                 style = MaterialTheme.typography.bodySmall
             )
 

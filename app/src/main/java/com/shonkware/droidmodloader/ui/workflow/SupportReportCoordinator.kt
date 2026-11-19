@@ -41,7 +41,7 @@ internal class SupportReportCoordinator(
     fun buildShareFile(cacheDir: File): File {
         val directory = File(cacheDir, "support-reports")
         check(directory.isDirectory || directory.mkdirs()) { "Could not create support report cache." }
-        val report = File.createTempFile("dml-support-report-", ".txt", directory)
+        val report = File.createTempFile("sml-support-report-", ".txt", directory)
         try {
             report.writeText(buildShareText())
             return report
@@ -61,7 +61,7 @@ internal class SupportReportCoordinator(
         val health = suppliedHealth?.takeIf { diagnostics.context == null ||
             it.isFor(diagnostics.context.profileId, diagnostics.context.gameId) }
         val summary = buildString {
-            appendLine("=== Droid Mod Loader Diagnostic Summary ===")
+            appendLine("=== Skyrim Mod Loader Diagnostic Summary ===")
             appendLine("Reports include full folder paths and historical logs. Only share with someone you trust.")
             appendLine("Profile: ${diagnostics.profileName ?: diagnostics.context?.profileId ?: "unavailable"}; game: ${diagnostics.context?.gameId ?: "unavailable"}")
             appendLine("Deployment: ${health?.phase?.summary ?: "unavailable"}")

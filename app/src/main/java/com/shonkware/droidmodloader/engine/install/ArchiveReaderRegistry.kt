@@ -40,7 +40,7 @@ class ArchiveReaderRegistry internal constructor(
                         ArchiveReadFailureCode
                             .UNSUPPORTED_VARIANT,
                     message =
-                        "RAR5 archives are not supported by this DML " +
+                        "RAR5 archives are not supported by this SML " +
                                 "release: $archiveName"
                 )
         }

@@ -32,10 +32,10 @@ internal object DeploymentStorageCapacity {
         return listOf(targets.data to plan.dataPlan, targets.root to plan.rootPlan).flatMap { (target, scope) ->
             val directory = target.deployDirectory ?: return@flatMap emptyList()
             val ownership = if (target.identity.mode in setOf("simulated", "root_simulated")) {
-                "DML managed simulated target"
-            } else "Selected target; DML manages only recorded files"
+                "SML managed simulated target"
+            } else "Selected target; SML manages only recorded files"
             val copies = Budget("${target.targetType.displayName} deployment copies", directory, ownership)
-            val backups = Budget("${target.targetType.displayName} new backups", target.backupDirectory, "DML managed backup directory")
+            val backups = Budget("${target.targetType.displayName} new backups", target.backupDirectory, "SML managed backup directory")
             val restoreExtra = Budget("${target.targetType.displayName} restore fallback", directory, ownership)
             val inspected = scope.operations.take(remaining)
             remaining -= inspected.size

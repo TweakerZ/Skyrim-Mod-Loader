@@ -365,15 +365,15 @@ class ModEngine(
     internal fun buildStorageDiagnosticSummary(gameId: String): String {
         val base = appContext.getExternalFilesDir(null)
         val locations = mutableListOf(
-            StorageWriteRequirement("Managed archive copies", archiveLibraryDir, "DML managed legacy archive location",
+            StorageWriteRequirement("Managed archive copies", archiveLibraryDir, "SML managed legacy archive location",
                 details = "No new archive was selected for sizing; imports are temporary, not a permanent cache."),
-            StorageWriteRequirement("Extraction and prepared sessions", tempDir, "DML managed profile temporary content",
+            StorageWriteRequirement("Extraction and prepared sessions", tempDir, "SML managed profile temporary content",
                 details = "Expanded archive size and selected installer content were not sized by this observation."),
-            StorageWriteRequirement("Installed mods and installation staging", modsDir, "DML managed profile content",
+            StorageWriteRequirement("Installed mods and installation staging", modsDir, "SML managed profile content",
                 details = "A new staged copy needs selected content size; rename-only replacement backups are not new copies.")
         )
         if (base != null) locations.add(StorageWriteRequirement("Temporary import snapshots",
-            ArchiveImportFileStore.snapshotDirectory(base), "DML managed temporary copies"))
+            ArchiveImportFileStore.snapshotDirectory(base), "SML managed temporary copies"))
         val (deployment, notes) = deploymentService.storageDiagnosticRequirements(gameId)
         locations.addAll(deployment)
         val platform = AndroidStorageCapacityProbe(appContext)

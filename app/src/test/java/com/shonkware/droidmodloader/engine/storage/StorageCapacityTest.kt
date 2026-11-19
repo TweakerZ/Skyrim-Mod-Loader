@@ -145,7 +145,7 @@ class StorageCapacityTest {
     }
 
     private fun write(name: String, bytes: Long?) =
-        StorageWriteRequirement(name, File("/test/$name"), "DML owned", bytes, bytes != null)
+        StorageWriteRequirement(name, File("/test/$name"), "SML owned", bytes, bytes != null)
 
     private fun measured(id: String?, bytes: Long?) = StorageCapacityMeasurement(id, bytes)
 

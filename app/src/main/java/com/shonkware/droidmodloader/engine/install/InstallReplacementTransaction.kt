@@ -256,7 +256,7 @@ internal class InstallReplacementTransactionStore {
             FileOutputStream(temporaryFile).use { output ->
                 properties.store(
                     output,
-                    "Droid Mod Loader install transaction"
+                    "Skyrim Mod Loader install transaction"
                 )
                 output.fd.sync()
             }

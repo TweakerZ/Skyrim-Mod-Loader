@@ -63,7 +63,7 @@ class ZipArchiveReader : ArchiveReader {
             throw ArchiveReadException(
                 code = ArchiveReadFailureCode.IO_FAILURE,
                 message =
-                    "DML could not read ZIP archive data: " +
+                    "SML could not read ZIP archive data: " +
                             archive.name,
                 cause = exception
             )

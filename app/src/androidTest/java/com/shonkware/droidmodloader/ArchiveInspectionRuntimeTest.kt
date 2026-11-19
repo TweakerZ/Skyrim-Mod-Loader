@@ -90,7 +90,7 @@ class ArchiveInspectionRuntimeTest {
             val readFailure = assertThrows(ArchiveReadException::class.java) {
                 installer.prepare(zip(root, "unsafe-$index.zip", path))
             }
-            // Android 14+ rejects traversal before DML's own guard; Windows paths reach DML.
+            // Android 14+ rejects traversal before SML's own guard; Windows paths reach SML.
             val platformRefusal = index == 0 && Build.VERSION.SDK_INT >= 34
             assertEquals(if (platformRefusal) ArchiveReadFailureCode.CORRUPT_OR_UNSUPPORTED
                 else ArchiveReadFailureCode.UNSAFE_ENTRY_PATH, readFailure.code)

@@ -55,7 +55,7 @@ fun OverwriteDialog(
                 )
 
                 Text(
-                    text = "Files added or changed in the game's Data folder since DML last recorded it.",
+                    text = "Files added or changed in the game's Data folder since SML last recorded it.",
                     style = MaterialTheme.typography.bodySmall
                 )
 
@@ -63,7 +63,7 @@ fun OverwriteDialog(
 
                 if (!baselineExists) {
                     Text(
-                        text = "DML has no saved file list for this Data folder yet. It creates one after you choose a game folder.",
+                        text = "SML has no saved file list for this Data folder yet. It creates one after you choose a game folder.",
                         style = MaterialTheme.typography.bodySmall
                     )
                 } else if (entries.isEmpty()) {

@@ -44,7 +44,7 @@ class ArchiveFormatProbe {
         } catch (exception: IOException) {
             throw ArchiveFormatProbeException(
                 code = ArchiveProbeFailureCode.FILE_NOT_READABLE,
-                message = "DML could not read archive data from ${archive.name}.",
+                message = "SML could not read archive data from ${archive.name}.",
                 cause = exception
             )
         }

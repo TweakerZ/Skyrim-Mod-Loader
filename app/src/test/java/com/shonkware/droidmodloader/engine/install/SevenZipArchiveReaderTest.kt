@@ -151,7 +151,7 @@ class SevenZipArchiveReaderTest {
             )
             assertTrue(
                 failure.message.orEmpty().contains(
-                    "above DML's safe 1.0 MiB limit"
+                    "above SML's safe 1.0 MiB limit"
                 )
             )
             assertFalse(

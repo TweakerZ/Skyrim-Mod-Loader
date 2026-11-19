@@ -35,7 +35,7 @@ class StorageCapacityTest {
             val probe = AndroidStorageCapacityProbe(context)
             val requirements = roots.flatMapIndexed { index, root ->
                 listOf(root, File(root, "missing/stage")).map { path ->
-                    StorageWriteRequirement("fixture $index", path, "DML owned fixture", 1L, true)
+                    StorageWriteRequirement("fixture $index", path, "SML owned fixture", 1L, true)
                 }
             }
             val expectedIds = roots.map { storage.getUuidForPath(it).toString() }.toSet()

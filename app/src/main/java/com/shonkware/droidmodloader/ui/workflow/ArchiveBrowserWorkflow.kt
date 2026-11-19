@@ -126,7 +126,7 @@ internal class ArchiveBrowserWorkflow(
                         folderPath = folderPath,
                         isLoading = false,
                         errorMessage = t.message
-                            ?: "DML could not scan the selected archive folder."
+                            ?: "SML could not scan the selected archive folder."
                     )
                     val result = currentState
                     postToUiThread {

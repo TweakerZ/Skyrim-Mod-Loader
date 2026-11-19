@@ -561,7 +561,7 @@ internal class ModInspectionService(
             lower.endsWith(".esp") ||
                     lower.endsWith(".esm") ||
                     lower.endsWith(".esl") ->
-                "New plugin file found outside Droid Mod Loader deployment"
+                "New plugin file found outside Skyrim Mod Loader deployment"
 
             else ->
                 "File was created or changed after the Data baseline was indexed"

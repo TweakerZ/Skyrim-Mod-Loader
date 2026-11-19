@@ -53,7 +53,7 @@ class RarArchiveReader internal constructor(
                                 ArchiveReadFailureCode.MULTIPART_ARCHIVE,
                             message =
                                 "Multipart RAR archives are not supported " +
-                                        "by this DML release: ${archive.name}"
+                                        "by this SML release: ${archive.name}"
                         )
                     }
 
@@ -72,7 +72,7 @@ class RarArchiveReader internal constructor(
             throw ArchiveReadException(
                 code = ArchiveReadFailureCode.IO_FAILURE,
                 message =
-                    "DML could not read or write RAR archive data: " +
+                    "SML could not read or write RAR archive data: " +
                             archive.name,
                 cause = exception
             )

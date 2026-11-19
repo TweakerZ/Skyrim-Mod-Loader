@@ -13,7 +13,7 @@ class SupportReportFileProvider : FileProvider() {
             return Intent(Intent.ACTION_SEND).apply {
                 type = "text/plain"
                 putExtra(Intent.EXTRA_STREAM, uri)
-                clipData = ClipData.newRawUri("DML support report", uri)
+                clipData = ClipData.newRawUri("SML support report", uri)
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
         }

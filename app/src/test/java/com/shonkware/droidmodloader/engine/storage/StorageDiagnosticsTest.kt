@@ -8,8 +8,8 @@ class StorageDiagnosticsTest {
     @Test
     fun `report keeps required bytes unknown and separates known available space from inventory`() {
         val facts = StorageCapacity.assess(listOf(
-            StorageWriteRequirement("Archive", File("/owned/archives"), "DML managed"),
-            StorageWriteRequirement("Installed mods and staging", File("/owned/mods"), "DML managed")
+            StorageWriteRequirement("Archive", File("/owned/archives"), "SML managed"),
+            StorageWriteRequirement("Installed mods and staging", File("/owned/mods"), "SML managed")
         ), StorageCapacityProbe { StorageCapacityMeasurement("shared", 1234L) })
         val report = StorageDiagnostics(0L, facts, ManagedArchiveInventory(1, 99L, complete = true), emptyList()).toSummary()
         assertTrue(report.contains("historical observation at 1970-01-01T00:00:00Z"))
@@ -37,7 +37,7 @@ class StorageDiagnosticsTest {
     @Test
     fun `independent volumes remain separate without a combined free space total`() {
         val facts = StorageCapacity.assess(listOf(
-            StorageWriteRequirement("Archive", File("/one"), "DML managed"),
+            StorageWriteRequirement("Archive", File("/one"), "SML managed"),
             StorageWriteRequirement("Target", File("/two"), "Selected target")
         ), StorageCapacityProbe { StorageCapacityMeasurement(it.path, if (it.path == "/one") 111L else 222L) })
         val report = StorageDiagnostics(0L, facts, ManagedArchiveInventory(bytes = 0L, complete = true), emptyList()).toSummary()

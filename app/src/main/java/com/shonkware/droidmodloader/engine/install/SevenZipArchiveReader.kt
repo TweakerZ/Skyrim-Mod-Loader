@@ -179,7 +179,7 @@ class SevenZipArchiveReader internal constructor(
             message =
                 "The 7z archive requires approximately " +
                         "${formatMiB(exception.memoryNeededInKb)} MiB " +
-                        "of decoder memory, above DML's safe " +
+                        "of decoder memory, above SML's safe " +
                         "${formatMiB(exception.memoryLimitInKb.toLong())} " +
                         "MiB limit: ${archive.name}",
             cause = exception

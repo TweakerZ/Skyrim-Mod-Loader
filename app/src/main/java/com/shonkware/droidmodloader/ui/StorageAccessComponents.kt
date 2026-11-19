@@ -16,9 +16,9 @@ fun AllFilesAccessDialog(
         },
         text = {
             Text(
-                "Droid Mod Loader manages game, mod, archive, backup, and plugin files " +
+                "Skyrim Mod Loader manages game, mod, archive, backup, and plugin files " +
                     "through direct filesystem paths. Enable Allow access to manage all " +
-                    "files for Droid Mod Loader, then return to the app."
+                    "files for Skyrim Mod Loader, then return to the app."
             )
         },
         confirmButton = {

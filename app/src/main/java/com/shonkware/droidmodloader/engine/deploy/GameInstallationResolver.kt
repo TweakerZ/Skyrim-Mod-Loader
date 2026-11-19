@@ -18,7 +18,7 @@ data class GameInstallationResolution(
 }
 
 /**
- * Resolves the normal DML deployment targets from one explicitly selected game
+ * Resolves the normal SML deployment targets from one explicitly selected game
  * installation folder. Path validity and game identity remain authoritative in
  * [GameTargetValidator].
  */

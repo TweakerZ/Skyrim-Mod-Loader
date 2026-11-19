@@ -137,7 +137,7 @@ class SessionRecreationTest {
             assertNull(session.consumeSupportReport())
             session.requestSupportReport()
         }
-        assertTrue(checkNotNull(exported).readText().contains("Droid Mod Loader Diagnostic Summary"))
+        assertTrue(checkNotNull(exported).readText().contains("Skyrim Mod Loader Diagnostic Summary"))
         compose.waitUntil(5_000) { session.pendingSupportReportFile != null && !session.isOperationAdmitted }
         compose.runOnIdle {
             session.selectedGameId = "fallout_nv"
