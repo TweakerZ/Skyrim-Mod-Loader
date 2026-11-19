@@ -46,7 +46,8 @@ fun EspCard(
     onMovePluginUp: (String) -> Unit,
     onMovePluginDown: (String) -> Unit,
     onSaveEspOrder: () -> Unit,
-    hasPendingChanges: Boolean = false
+    hasPendingChanges: Boolean = false,
+    enabled: Boolean = true
 ) {
     // Keep the caller's order exactly. The pending list is already in display
     // order, so sorting by priority here would undo live Up/Down moves.
@@ -61,6 +62,8 @@ fun EspCard(
             modifier = Modifier.padding(12.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            Text("ESP / Plugins", fontWeight = FontWeight.Bold)
+
             Text(
                 text = "ESP/ESM/ESL plugins. Tick to enable/disable; use Up/Down to reorder. " +
                     "Changes apply when you tap Save Order.",
@@ -80,7 +83,8 @@ fun EspCard(
                             !orderedPlugins[index + 1].locked,
                         onTogglePlugin = onTogglePlugin,
                         onMovePluginUp = onMovePluginUp,
-                        onMovePluginDown = onMovePluginDown
+                        onMovePluginDown = onMovePluginDown,
+                        enabled = enabled
                     )
                 }
             }
@@ -108,7 +112,7 @@ fun EspCard(
             DmlButtons.Primary(
                 text = "Save ESP Order",
                 onClick = onSaveEspOrder,
-                enabled = hasPendingChanges,
+                enabled = enabled && hasPendingChanges,
                 modifier = Modifier.fillMaxWidth()
             )
         }
@@ -123,7 +127,8 @@ private fun CompactPluginRow(
     canMoveDown: Boolean,
     onTogglePlugin: (String) -> Unit,
     onMovePluginUp: (String) -> Unit,
-    onMovePluginDown: (String) -> Unit
+    onMovePluginDown: (String) -> Unit,
+    enabled: Boolean = true
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -146,7 +151,7 @@ private fun CompactPluginRow(
                     onCheckedChange = {
                         if (!plugin.locked) onTogglePlugin(plugin.normalizedPath)
                     },
-                    enabled = !plugin.locked
+                    enabled = enabled && !plugin.locked
                 )
 
                 Text(
@@ -168,7 +173,7 @@ private fun CompactPluginRow(
                     )
                 }
 
-                TextButton(onClick = { expanded = !expanded }) {
+                TextButton(onClick = { expanded = !expanded }, enabled = enabled) {
                     Text(if (expanded) "Less" else "More")
                 }
             }
@@ -178,13 +183,13 @@ private fun CompactPluginRow(
                     DmlButtons.Secondary(
                         text = "Up",
                         onClick = { onMovePluginUp(plugin.normalizedPath) },
-                        enabled = canMoveUp
+                        enabled = enabled && canMoveUp
                     )
 
                     DmlButtons.Secondary(
                         text = "Down",
                         onClick = { onMovePluginDown(plugin.normalizedPath) },
-                        enabled = canMoveDown
+                        enabled = enabled && canMoveDown
                     )
                 }
             }

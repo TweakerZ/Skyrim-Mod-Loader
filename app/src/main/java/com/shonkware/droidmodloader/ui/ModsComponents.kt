@@ -56,7 +56,10 @@ fun ModsCard(
     onMoveModToPosition: (String, Int) -> Unit,
     onDeleteMod: (Mod) -> Unit,
     onViewModFiles: (String) -> Unit,
-    onOpenOverwriteFolder: () -> Unit
+    onOpenOverwriteFolder: () -> Unit,
+    onDisableAllMods: () -> Unit,
+    onEnableAllMods: () -> Unit,
+    enabled: Boolean = true
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -72,8 +75,27 @@ fun ModsCard(
             DmlButtons.Secondary(
                 text = "Open Overwrite Folder",
                 onClick = onOpenOverwriteFolder,
+                enabled = enabled,
                 modifier = Modifier.fillMaxWidth()
             )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                DmlButtons.Secondary(
+                    text = "Disable All",
+                    onClick = onDisableAllMods,
+                    enabled = enabled && mods.any { it.enabled },
+                    modifier = Modifier.weight(1f)
+                )
+                DmlButtons.Secondary(
+                    text = "Enable All",
+                    onClick = onEnableAllMods,
+                    enabled = enabled && mods.any { !it.enabled },
+                    modifier = Modifier.weight(1f)
+                )
+            }
 
             if (mods.isEmpty()) {
                 Text("No installed mods found.")
@@ -91,7 +113,8 @@ fun ModsCard(
                         onMoveModDown = onMoveModDown,
                         onMoveModToPosition = onMoveModToPosition,
                         onDeleteMod = onDeleteMod,
-                        onViewModFiles = onViewModFiles
+                        onViewModFiles = onViewModFiles,
+                        enabled = enabled
                     )
                 }
             }
@@ -358,7 +381,8 @@ fun CompactModRow(
     onMoveModDown: (String) -> Unit,
     onMoveModToPosition: (String, Int) -> Unit,
     onDeleteMod: (Mod) -> Unit,
-    onViewModFiles: (String) -> Unit
+    onViewModFiles: (String) -> Unit,
+    enabled: Boolean = true
 ) {
     var expanded by remember { mutableStateOf(false) }
     var positionText by remember(mod.id) { mutableStateOf("") }
@@ -381,7 +405,8 @@ fun CompactModRow(
             ) {
                 Checkbox(
                     checked = mod.enabled,
-                    onCheckedChange = { onToggleMod(mod.id) }
+                    onCheckedChange = { onToggleMod(mod.id) },
+                    enabled = enabled
                 )
 
                 Text(
@@ -423,7 +448,7 @@ fun CompactModRow(
                     }
                 }
 
-                TextButton(onClick = { expanded = !expanded }) {
+                TextButton(onClick = { expanded = !expanded }, enabled = enabled) {
                     Text(if (expanded) "Less" else "More")
                 }
             }
@@ -440,12 +465,14 @@ fun CompactModRow(
                     ) {
                         DmlButtons.Secondary(
                             text = "Up",
-                            onClick = { onMoveModUp(mod.id) }
+                            onClick = { onMoveModUp(mod.id) },
+                            enabled = enabled
                         )
 
                         DmlButtons.Secondary(
                             text = "Down",
-                            onClick = { onMoveModDown(mod.id) }
+                            onClick = { onMoveModDown(mod.id) },
+                            enabled = enabled
                         )
 
                         ModPositionField(
@@ -468,19 +495,21 @@ fun CompactModRow(
                                     positionText = ""
                                 }
                             },
-                            enabled = positionText.toIntOrNull()?.let { it in 1..maxPosition } == true
+                            enabled = enabled && positionText.toIntOrNull()?.let { it in 1..maxPosition } == true
                         )
                     }
 
                     DmlButtons.Secondary(
                         text = "View Files",
                         onClick = { onViewModFiles(mod.id) },
+                        enabled = enabled,
                         modifier = Modifier.fillMaxWidth()
                     )
 
                     DmlButtons.Danger(
                         text = "Delete",
                         onClick = { onDeleteMod(mod) },
+                        enabled = enabled,
                         modifier = Modifier.fillMaxWidth()
                     )
 

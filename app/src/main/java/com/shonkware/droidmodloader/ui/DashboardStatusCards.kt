@@ -26,7 +26,8 @@ fun StatusCard(
     realDeployEnabled: Boolean,
     lastOperationStatus: String,
     summaryText: String,
-    onOpenProfileDialog: () -> Unit
+    onOpenProfileDialog: () -> Unit,
+    enabled: Boolean = true
 ) {
     SuiteCard {
         Text(
@@ -43,6 +44,7 @@ fun StatusCard(
         DmlButtons.Secondary(
             text = "Manage Profiles",
             onClick = onOpenProfileDialog,
+            enabled = enabled,
             modifier = Modifier.fillMaxWidth()
         )
     }

@@ -246,6 +246,7 @@ private fun MainDashboardScreen(
     actions: DashboardActions
 ) {
     var settingsVisible by rememberSaveable { mutableStateOf(false) }
+    val uiEnabled = !state.operationInProgress && !state.archiveImportInProgress
 
     val visibleNotifications = state.appAttention.filterNot { it.id in state.dismissedAttentionIds }
 
@@ -278,7 +279,7 @@ private fun MainDashboardScreen(
         title = state.appName,
         subtitle = state.versionLabel,
         chips = chips,
-        onSettings = { settingsVisible = true },
+        onSettings = if (uiEnabled) ({ settingsVisible = true }) else null,
         primaryAction = SuiteBarAction(
             label = "Deploy Mods",
             onClick = actions.onDeployMods,
@@ -293,7 +294,7 @@ private fun MainDashboardScreen(
             SuiteBarAction(
                 label = "Profiles",
                 onClick = actions.onOpenProfileDialog,
-                enabled = !state.operationInProgress
+                enabled = uiEnabled
             )
         ),
         busy = state.operationInProgress || state.archiveImportInProgress,
@@ -322,7 +323,8 @@ private fun MainDashboardScreen(
                 realDeployEnabled = state.realDeployEnabled,
                 lastOperationStatus = state.lastOperationStatus,
                 summaryText = state.summaryText,
-                onOpenProfileDialog = actions.onOpenProfileDialog
+                onOpenProfileDialog = actions.onOpenProfileDialog,
+                enabled = uiEnabled
             )
 
             ModsCard(
@@ -336,10 +338,12 @@ private fun MainDashboardScreen(
                 onMoveModToPosition = actions.onMoveModToPosition,
                 onDeleteMod = actions.onDeleteMod,
                 onViewModFiles = actions.onViewModFiles,
-                onOpenOverwriteFolder = actions.onOpenOverwriteFolder
+                onOpenOverwriteFolder = actions.onOpenOverwriteFolder,
+                onDisableAllMods = actions.onDisableAllMods,
+                onEnableAllMods = actions.onEnableAllMods,
+                enabled = uiEnabled
             )
 
-            SectionHeader("ESP / Plugins")
             EspCard(
                 plugins = state.pendingEspPlugins.takeIf { it.isNotEmpty() } ?: state.plugins,
                 archives = state.modContentIndexes.values
@@ -349,7 +353,8 @@ private fun MainDashboardScreen(
                 onMovePluginUp = actions.onMovePendingPluginUp,
                 onMovePluginDown = actions.onMovePendingPluginDown,
                 onSaveEspOrder = actions.onSaveEspOrder,
-                hasPendingChanges = state.pendingEspHasChanges
+                hasPendingChanges = state.pendingEspHasChanges,
+                enabled = uiEnabled
             )
 
             RecentOperationsCard(state.operationHistory)
@@ -406,10 +411,8 @@ private fun MainDashboardScreen(
             selectedRootPathText = state.selectedRootPathText,
             portFolderPath = state.portFolderPath,
             portFolderValidationMessage = state.portFolderValidationMessage,
-            secondScreenEnabled = state.secondScreenEnabled,
             onPickTargetFolder = actions.onPickTargetFolder,
-            onSaveSettings = actions.onSaveSettings,
-            onToggleSecondScreen = actions.onToggleSecondScreen
+            onSaveSettings = actions.onSaveSettings
         )
 
         SuiteDetailRow("Version", state.versionLabel)
@@ -574,8 +577,8 @@ fun DroidModLoaderScreen(
             text = {
                 Text(
                     "This will rewrite every currently managed file for this profile.\n\n" +
-                        "It will not intentionally delete unmanaged files, but it can replace files already managed by Droid Mod Loader.\n\n" +
-                        "This is not a repair for an interrupted operation. DML blocks it while an earlier deployment or installation still needs recovery."
+                        "It will not intentionally delete unmanaged files, but it can replace files already managed by Skyrim Mod Loader.\n\n" +
+                        "This is not a repair for an interrupted operation. SML blocks it while an earlier deployment or installation still needs recovery."
                 )
             },
             confirmButton = {

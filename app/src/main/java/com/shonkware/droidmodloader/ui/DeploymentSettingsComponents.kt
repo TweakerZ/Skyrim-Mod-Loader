@@ -11,7 +11,6 @@ import androidx.compose.ui.unit.dp
 import com.shonkware.droidmodloader.ui.theme.DmlButtons
 import com.skyrimsuite.ui.SuitePathRow
 import com.skyrimsuite.ui.SuiteSectionHeader
-import com.skyrimsuite.ui.SuiteToggleRow
 
 /**
  * Contents of the advanced-settings sheet. Every filesystem path in the app
@@ -23,15 +22,13 @@ fun DeploymentSettingsCard(
     selectedRootPathText: String,
     portFolderPath: String,
     portFolderValidationMessage: String?,
-    secondScreenEnabled: Boolean,
     onPickTargetFolder: () -> Unit,
-    onSaveSettings: () -> Unit,
-    onToggleSecondScreen: () -> Unit
+    onSaveSettings: () -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         SuiteSectionHeader(
             title = "Game folders",
-            subtitle = "DML checks the game folder and finds its Data folder automatically."
+            subtitle = "SML checks the game folder and finds its Data folder automatically."
         )
 
         SuitePathRow(
@@ -64,13 +61,6 @@ fun DeploymentSettingsCard(
             text = "Save Settings",
             onClick = onSaveSettings,
             modifier = Modifier.fillMaxWidth()
-        )
-
-        SuiteToggleRow(
-            title = "Show plugins on second screen",
-            subtitle = "Mirrors the plugin list on an external display.",
-            checked = secondScreenEnabled,
-            onCheckedChange = { onToggleSecondScreen() }
         )
     }
 }

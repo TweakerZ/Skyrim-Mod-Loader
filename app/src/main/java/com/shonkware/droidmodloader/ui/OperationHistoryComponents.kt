@@ -3,6 +3,7 @@ package com.shonkware.droidmodloader.ui
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
@@ -15,6 +16,7 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -32,22 +34,39 @@ internal fun RecentOperationsCard(history: OperationHistoryPresentation) {
         border = BorderStroke(1.dp, DmlColors.BorderDim)
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("Recent Activity", fontWeight = FontWeight.Bold)
-            Text(history.status, style = MaterialTheme.typography.bodySmall)
-            history.entries.forEach { entry ->
-                key(entry.id) {
-                    var expanded by rememberSaveable { mutableStateOf(false) }
-                    Text("${entry.title}: ${entry.outcome}", fontWeight = FontWeight.Bold)
-                    Text(entry.context, style = MaterialTheme.typography.bodySmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                    Text(entry.reason, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                    TextButton(
-                        onClick = { expanded = !expanded },
-                        modifier = Modifier.semantics { contentDescription = "Details for attempt ${entry.id}" }
-                    ) { Text(if (expanded) "Hide details" else "Details") }
-                    if (expanded) Text("${entry.context}\n${entry.details}", style = MaterialTheme.typography.bodySmall)
+            var detailsVisible by rememberSaveable { mutableStateOf(false) }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Recent Activity",
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.weight(1f)
+                )
+                TextButton(onClick = { detailsVisible = !detailsVisible }) {
+                    Text(if (detailsVisible) "Hide Details" else "Show Details")
                 }
             }
-            Text("Past results do not check your current files or repair unfinished changes.", style = MaterialTheme.typography.bodySmall)
+
+            if (detailsVisible) {
+                Text(history.status, style = MaterialTheme.typography.bodySmall)
+                history.entries.forEach { entry ->
+                    key(entry.id) {
+                        var expanded by rememberSaveable { mutableStateOf(false) }
+                        Text("${entry.title}: ${entry.outcome}", fontWeight = FontWeight.Bold)
+                        Text(entry.context, style = MaterialTheme.typography.bodySmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                        Text(entry.reason, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                        TextButton(
+                            onClick = { expanded = !expanded },
+                            modifier = Modifier.semantics { contentDescription = "Details for attempt ${entry.id}" }
+                        ) { Text(if (expanded) "Hide details" else "Details") }
+                        if (expanded) Text("${entry.context}\n${entry.details}", style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+                Text("Past results do not check your current files or repair unfinished changes.", style = MaterialTheme.typography.bodySmall)
+            }
         }
     }
 }

@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
@@ -15,6 +16,8 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import com.shonkware.droidmodloader.attention.*
 import com.shonkware.droidmodloader.engine.index.ModFilePreview
+import com.shonkware.droidmodloader.engine.model.Mod
+import com.shonkware.droidmodloader.engine.model.ModType
 import com.shonkware.droidmodloader.engine.storage.DirectFolderBrowserState
 import com.shonkware.droidmodloader.ui.*
 import com.shonkware.droidmodloader.ui.theme.DmlTheme
@@ -25,6 +28,36 @@ import org.junit.Test
 /** Pure synthetic presentation/callback tests; no ViewModel, engine, real folders or permissions. */
 class UiWordingRuntimeTest {
     @get:Rule val compose = createComposeRule()
+
+    @Test fun busyOperationDisablesDashboardActions() {
+        var busy by mutableStateOf(false)
+        val mod = Mod("synthetic-mod", "Synthetic mod", "/fixture/mod", true, 1, ModType.LOOSE)
+        val base = UiWordingFixtures.state()
+        val actions = UiWordingFixtures.actions()
+        compose.setContent {
+            DmlTheme {
+                InfoPopoverHost {
+                    DroidModLoaderScreen(
+                        base.copy(
+                            mods = listOf(mod),
+                            operationInProgress = busy,
+                            activeOperationText = if (busy) "Deploying mods..." else ""
+                        ),
+                        actions
+                    )
+                }
+            }
+        }
+        compose.onNodeWithText("Disable All").performScrollTo().assertIsEnabled()
+        compose.onNodeWithText("Manage Profiles").performScrollTo().assertIsEnabled()
+
+        compose.runOnIdle { busy = true }
+        compose.onNodeWithText("Open Overwrite Folder").performScrollTo().assertIsNotEnabled()
+        compose.onNodeWithText("Disable All").performScrollTo().assertIsNotEnabled()
+        compose.onNodeWithText("Enable All").performScrollTo().assertIsNotEnabled()
+        compose.onNodeWithText("Manage Profiles").performScrollTo().assertIsNotEnabled()
+        compose.onNodeWithText("Deploy Mods").assertIsNotEnabled()
+    }
 
     @Test fun reportNamesMatchTheirActionsAndBusyState() {
         val calls = mutableListOf<String>()
@@ -43,6 +76,7 @@ class UiWordingRuntimeTest {
                 }
             }
         }
+        compose.onNodeWithText("Show Details").performScrollTo().performClick()
         compose.onNodeWithText("Deployment Summary: Not checked yet").assertIsDisplayed()
         for (label in listOf("Refresh Deployment Summary", "Check Game Setup", "Show Storage Info", "Check Recorded Files", "Share Logs")) {
             compose.onNodeWithText(label).performScrollTo().performClick()
