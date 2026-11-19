@@ -71,6 +71,7 @@ import com.shonkware.droidmodloader.engine.io.LegacyProfileStorageMigrator
 import com.shonkware.droidmodloader.engine.io.SessionLogWriter
 import com.shonkware.droidmodloader.ui.workflow.ProfileWorkflowController
 import com.shonkware.droidmodloader.ui.workflow.ProfileManagementWorkflow
+import com.shonkware.droidmodloader.ui.workflow.ProfileSwitchEngineAdapter
 import com.shonkware.droidmodloader.ui.workflow.FirstSetupInput
 import com.shonkware.droidmodloader.ui.workflow.AdditionalProfileInput
 import com.shonkware.droidmodloader.ui.workflow.DashboardProfileInput
@@ -435,9 +436,9 @@ internal class SessionViewModel @JvmOverloads constructor(
      * to the port folder's Plugins.txt / loadorder.txt. Nothing is written until
      * this is called.
      */
-    fun savePendingEspOrder() {
+    fun savePendingEspOrder(): Boolean {
         ensurePendingEspPlugins()
-        if (pendingEspPlugins.isEmpty()) return
+        if (pendingEspPlugins.isEmpty()) return true
 
         val portPath = portFolderPath
         if (portPath.isBlank()) {
@@ -446,7 +447,7 @@ internal class SessionViewModel @JvmOverloads constructor(
             )
             lastOperationStatus = "ESP order not saved: port folder missing."
             notifyToast("ESP order not saved: no port folder found.")
-            return
+            return false
         }
 
         // Re-number the list to the order currently shown in the card.
@@ -467,13 +468,14 @@ internal class SessionViewModel @JvmOverloads constructor(
             operationReporter.appendError("Could not save ESP order: ${e.message}", e)
             lastOperationStatus = "ESP order save failed."
             notifyToast("ESP order save failed.")
-            return
+            return false
         }
 
         // Reset pending state so it re-initializes from the freshly written files.
         pendingEspPlugins = emptyList()
         pendingEspHasChanges = false
         dashboardRefreshCoordinator.refresh()
+        return true
     }
 
     /**
@@ -1121,6 +1123,34 @@ internal class SessionViewModel @JvmOverloads constructor(
                 }
             },
             refreshDashboard = dashboardRefreshCoordinator::refresh,
+            createSwitchEngine = {
+                profileScopedEngineFactory.create()?.let { engine ->
+                    ProfileSwitchEngineAdapter(
+                        engine = engine,
+                        syncPluginsAction = { syncPluginsFromCurrentState(engine) }
+                    )
+                }
+            },
+            savePendingEspOrder = ::savePendingEspOrder,
+            beginOperation = { message -> operationReporter.beginOperation(message) },
+            finishOperation = { message -> operationReporter.finishOperation(message) },
+            failOperation = { message, throwable ->
+                operationReporter.failOperation(message, throwable)
+            },
+            closeProfileDialog = {
+                activityThreadRunner.runOnUiThreadBlocking { showProfileDialog = false }
+            },
+            deleteProfileStorage = { profileId ->
+                val externalBaseDir = getExternalFilesDir(null)
+                if (externalBaseDir == null) {
+                    operationReporter.appendError(
+                        "Could not delete profile files: external files directory is null."
+                    )
+                    false
+                } else {
+                    profileStoragePaths.deleteProfileStorage(profileId, externalBaseDir)
+                }
+            },
             appendLog = { message -> operationReporter.appendLog(message) },
             appendError = { message -> operationReporter.appendError(message) },
             updateLastOperationStatus = { status -> lastOperationStatus = status }
@@ -1880,7 +1910,7 @@ internal class SessionViewModel @JvmOverloads constructor(
 
     private fun cleanOldArchiveCopies() {
         runSessionOperation(requireNoPendingInstaller = true) {
-            operationReporter.beginOperation("Verifying old DML archive copies...")
+            operationReporter.beginOperation("Verifying old SML archive copies...")
             check(allFilesAccessManager.isGranted()) { "All-files access is required to verify originals." }
             val base = checkNotNull(getExternalFilesDir(null)) { "External files directory is unavailable." }
             val result = LegacyArchiveCleanup(

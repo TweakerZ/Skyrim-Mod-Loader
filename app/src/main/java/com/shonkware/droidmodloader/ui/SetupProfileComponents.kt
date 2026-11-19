@@ -1,5 +1,6 @@
 package com.shonkware.droidmodloader.ui
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,16 +12,26 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.shonkware.droidmodloader.engine.model.GameProfile
+import com.shonkware.droidmodloader.ui.theme.DmlButtons
+import com.shonkware.droidmodloader.ui.theme.DmlColors
+import com.shonkware.droidmodloader.ui.theme.DmlDefaults
 import com.shonkware.droidmodloader.ui.workflow.GameCatalog
 import com.skyrimsuite.ui.SuiteBarAction
 import com.skyrimsuite.ui.SuiteCard
@@ -62,7 +73,7 @@ fun SetupScreen(
     actions: DashboardActions
 ) {
     SuiteScreen(
-        title = "Droid Mod Loader",
+        title = "Skyrim Mod Loader",
         subtitle = "First setup",
         chips = listOf(
             SuiteChip("No profile yet", SuiteChipTone.Warning),
@@ -113,7 +124,7 @@ fun SetupScreen(
                 title = "Installed game folder",
                 path = state.setupRootTargetPathText,
                 onChange = actions.onPickTargetFolder,
-                supportingText = "DML checks the folder and finds its Data folder automatically."
+                supportingText = "SML checks the folder and finds its Data folder automatically."
             )
 
             com.skyrimsuite.ui.SuitePathRow(
@@ -156,6 +167,8 @@ fun ProfileManagerDialog(
     gameOptions: List<String>,
     newProfileRootPathText: String = ""
 ) {
+    var profilePendingDelete by remember { mutableStateOf<GameProfile?>(null) }
+
     AlertDialog(
         onDismissRequest = onClose,
         confirmButton = {
@@ -179,21 +192,12 @@ fun ProfileManagerDialog(
                     Text("No profiles found.")
                 } else {
                     profiles.forEach { profile ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            FilterChip(
-                                selected = profile.profileId == activeProfileId,
-                                onClick = { onSelectProfile(profile.profileId) },
-                                label = { Text(profile.profileName) }
-                            )
-
-                            TextButton(onClick = { onDeleteProfile(profile.profileId) }) {
-                                Text("Delete")
-                            }
-                        }
+                        ProfileCard(
+                            profile = profile,
+                            isActive = profile.profileId == activeProfileId,
+                            onSelectProfile = onSelectProfile,
+                            onRequestDelete = { profilePendingDelete = it }
+                        )
                     }
                 }
 
@@ -242,4 +246,126 @@ fun ProfileManagerDialog(
             }
         }
     )
+
+    profilePendingDelete?.let { profile ->
+        AlertDialog(
+            onDismissRequest = { profilePendingDelete = null },
+            title = {
+                Text("Delete profile?")
+            },
+            text = {
+                Text(
+                    "Delete \"${profile.profileName}\" and every mod installed in it? " +
+                        "This cannot be undone."
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        profilePendingDelete = null
+                        onDeleteProfile(profile.profileId)
+                    }
+                ) {
+                    Text("Delete profile")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { profilePendingDelete = null }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+}
+
+@Composable
+private fun ProfileCard(
+    profile: GameProfile,
+    isActive: Boolean,
+    onSelectProfile: (String) -> Unit,
+    onRequestDelete: (GameProfile) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val gameName = profile.gameDisplayName.ifBlank {
+        GameCatalog.displayName(profile.gameId)
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = DmlDefaults.raisedCardColors(),
+        border = BorderStroke(
+            width = if (isActive) 2.dp else 1.dp,
+            color = if (isActive) MaterialTheme.colorScheme.primary else DmlColors.BorderDim
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = profile.profileName,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f)
+                )
+
+                TextButton(onClick = { expanded = !expanded }) {
+                    Text(if (expanded) "Less" else "More")
+                }
+            }
+
+            if (expanded) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Text(
+                        text = "Game: $gameName",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    Text(
+                        text = "Game folder: ${profile.targetRootPath.ifBlank { "Not selected" }}",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    Text(
+                        text = "Data folder: ${profile.targetDataPath.ifBlank { "Not selected" }}",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    Text(
+                        text = "Deployment: ${
+                            if (profile.realDeployEnabled) "Direct" else "Simulated"
+                        }",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+
+                    if (isActive) {
+                        Text(
+                            text = "Active profile. Switch to another profile to delete it.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    } else {
+                        DmlButtons.Secondary(
+                            text = "Switch",
+                            onClick = { onSelectProfile(profile.profileId) },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        DmlButtons.Danger(
+                            text = "Delete",
+                            onClick = { onRequestDelete(profile) },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+            }
+        }
+    }
 }

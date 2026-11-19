@@ -26,6 +26,23 @@ internal class ProfileStoragePaths(
         return File(externalBaseDir, "state/profiles/${getActiveProfileStorageKey()}")
     }
 
+    /**
+     * Removes the profile's mod library, saved state, simulated deployment
+     * target and deployment backups. The shared archive library is not touched.
+     */
+    fun deleteProfileStorage(profileId: String, externalBaseDir: File): Boolean {
+        val key = sanitizeStorageName(profileId)
+        val internalProfilesDir = File(filesDir, "profiles")
+        val externalStateDir = File(externalBaseDir, "state/profiles")
+        val deployProfilesDir = File(externalBaseDir, "deploy_target/profiles")
+
+        return listOf(
+            File(internalProfilesDir, key),
+            File(externalStateDir, key),
+            File(deployProfilesDir, key)
+        ).all { it.deleteRecursively() }
+    }
+
     private fun sanitizeStorageName(value: String): String {
         return value
             .replace(Regex("""[^A-Za-z0-9._-]+"""), "_")
